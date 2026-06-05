@@ -7,7 +7,6 @@ const DEFAULT_SETTINGS: Settings = {
   day: "Monday",
   time: "09:00",
   timezone: "America/New_York",
-  fromEmail: "word@example.com",
 };
 
 export async function GET() {
@@ -22,7 +21,6 @@ export async function PUT(request: Request) {
     day: body.day ?? DEFAULT_SETTINGS.day,
     time: body.time ?? DEFAULT_SETTINGS.time,
     timezone: body.timezone ?? DEFAULT_SETTINGS.timezone,
-    fromEmail: body.fromEmail ?? DEFAULT_SETTINGS.fromEmail,
   };
   await redis.set("settings", settings);
   return NextResponse.json(settings);

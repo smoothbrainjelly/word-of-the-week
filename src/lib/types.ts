@@ -3,7 +3,6 @@ export type Settings = {
   day: string;
   time: string;
   timezone: string;
-  fromEmail: string;
 };
 
 export type Recipient = {

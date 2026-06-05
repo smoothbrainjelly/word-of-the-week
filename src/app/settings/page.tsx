@@ -85,16 +85,6 @@ export default function SettingsPage() {
             ))}
           </select>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">From Email</label>
-          <input
-            type="email"
-            className="w-full border rounded-lg p-2"
-            value={settings.fromEmail}
-            onChange={(e) => setSettings({ ...settings, fromEmail: e.target.value })}
-          />
-        </div>
       </div>
 
       <button
