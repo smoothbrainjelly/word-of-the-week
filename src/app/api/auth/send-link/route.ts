@@ -4,12 +4,15 @@ import { sendEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   const { name, email } = await request.json();
-  if (!name || !email) {
-    return NextResponse.json({ error: "Name and email are required" }, { status: 400 });
+  if (!email) {
+    return NextResponse.json({ error: "Email is required" }, { status: 400 });
   }
 
   const existing = await getUsersByEmail(email);
   if (!existing) {
+    if (!name) {
+      return NextResponse.json({ error: "Name is required for signup" }, { status: 400 });
+    }
     await createUser(name, email);
   } else if (!existing.active) {
     return NextResponse.json({ error: "Account is deactivated" }, { status: 403 });
