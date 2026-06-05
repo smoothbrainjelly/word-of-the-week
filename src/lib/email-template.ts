@@ -7,9 +7,9 @@ export type WordData = {
   example: string;
 };
 
-export function renderMarkdownTemplate(word: WordData): string {
-  return [
-    `# Word of the Day`,
+export function renderMarkdownTemplate(word: WordData, unsubscribeUrl?: string): string {
+  const lines = [
+    `# Word of the Week`,
     ``,
     `# ${word.word}`,
     ``,
@@ -26,11 +26,17 @@ export function renderMarkdownTemplate(word: WordData): string {
     `### Example`,
     ``,
     `> ${word.example}`,
-  ].join("\n");
+  ];
+
+  if (unsubscribeUrl) {
+    lines.push(``, `---`, ``, `[Unsubscribe](${unsubscribeUrl}) from Word of the Week.`);
+  }
+
+  return lines.join("\n");
 }
 
-export function renderHtmlTemplate(word: WordData): { html: string; text: string } {
-  const markdown = renderMarkdownTemplate(word);
+export function renderHtmlTemplate(word: WordData, unsubscribeUrl?: string): { html: string; text: string } {
+  const markdown = renderMarkdownTemplate(word, unsubscribeUrl);
   const html = marked.parse(markdown) as string;
   return { html, text: markdown };
 }
