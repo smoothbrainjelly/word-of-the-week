@@ -24,10 +24,15 @@ export async function GET(request: Request) {
   weekStart.setDate(now.getDate() - now.getDay());
   const weekKey = weekStart.toISOString().slice(0, 10);
 
-  const lastSent = await redis.get<string>("last_sent_week");
-  if (lastSent === weekKey) {
-    console.log("[cron] Already sent this week", { weekKey });
-    return NextResponse.json({ message: "Already sent this week" });
+  const forceSend = await redis.get<boolean>("force_send");
+  if (forceSend) {
+    console.log("[cron] Force-send enabled, skipping week check");
+  } else {
+    const lastSent = await redis.get<string>("last_sent_week");
+    if (lastSent === weekKey) {
+      console.log("[cron] Already sent this week", { weekKey });
+      return NextResponse.json({ message: "Already sent this week" });
+    }
   }
 
   const users = await getUsers();
