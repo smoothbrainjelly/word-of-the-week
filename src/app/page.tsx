@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Recipient, Settings, HistoryEntry } from "@/lib/types";
+import type { Settings, HistoryEntry } from "@/lib/types";
+import type { User } from "@/lib/auth";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -25,7 +26,7 @@ function daysUntil(day: string, time: string, timezone: string): string {
 export default function DashboardPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [activeCount, setActiveCount] = useState(0);
-  const [totalRecipients, setTotalRecipients] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [recent, setRecent] = useState<HistoryEntry[]>([]);
 
   useEffect(() => {
@@ -33,11 +34,12 @@ export default function DashboardPage() {
       .then((r) => r.json())
       .then(setSettings);
 
-    fetch("/api/recipients")
+    fetch("/api/users")
       .then((r) => r.json())
       .then((list) => {
-        setTotalRecipients(list.length);
-        setActiveCount((list as Recipient[]).filter((r) => r.active).length);
+        const users = list as User[];
+        setTotalUsers(users.length);
+        setActiveCount(users.filter((u) => u.active).length);
       });
 
     fetch("/api/history?page=1&limit=5")
@@ -51,8 +53,8 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-3 gap-4">
         <div className="border rounded-lg p-4 text-center">
-          <p className="text-2xl font-bold">{totalRecipients}</p>
-          <p className="text-xs text-zinc-500">Recipients</p>
+          <p className="text-2xl font-bold">{totalUsers}</p>
+          <p className="text-xs text-zinc-500">Users</p>
         </div>
         <div className="border rounded-lg p-4 text-center">
           <p className="text-2xl font-bold">{activeCount}</p>

@@ -3,7 +3,8 @@ import crypto from "crypto";
 import { redis } from "@/lib/redis";
 import { generateWord } from "@/lib/gemini";
 import { sendEmail } from "@/lib/email";
-import type { Settings, Recipient, HistoryEntry } from "@/lib/types";
+import { getUsers } from "@/lib/auth";
+import type { Settings, HistoryEntry } from "@/lib/types";
 
 function getDayName(timezone: string): string {
   return new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: timezone }).format(new Date());
@@ -43,8 +44,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "Not time yet" });
   }
 
-  const recipients = (await redis.get<Recipient[]>("recipients")) ?? [];
-  const active = recipients.filter((r) => r.active);
+  const users = await getUsers();
+  const active = users.filter((u) => u.active);
   if (active.length === 0) {
     return NextResponse.json({ error: "No active recipients" }, { status: 400 });
   }
@@ -59,12 +60,12 @@ export async function GET(request: Request) {
   ].join("\n");
 
   let sentCount = 0;
-  for (const recipient of active) {
+  for (const user of active) {
     try {
-      await sendEmail(recipient.email, `Word of the Week: ${word.word}`, body);
+      await sendEmail(user.email, `Word of the Week: ${word.word}`, body);
       sentCount++;
     } catch (e) {
-      console.error(`Failed to send to ${recipient.email}:`, e);
+      console.error(`Failed to send to ${user.email}:`, e);
     }
   }
 
