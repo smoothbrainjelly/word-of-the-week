@@ -25,6 +25,8 @@ function isQuotaError(err: unknown): boolean {
 
 type WordResult = {
   word: string;
+  pronunciation: string;
+  simple_pronunciation: string;
   definition: string;
   etymology: string;
   example: string;
@@ -34,6 +36,8 @@ export async function generateWord(theme: string): Promise<WordResult> {
   const prompt = `You are a "Word of the Week" generator. Given this theme: "${theme}", pick a fitting word and return JSON (no markdown, no backticks) with:
 {
   "word": "the word",
+  "pronunciation": "phonetic pronunciation in IPA (e.g., /ˈsɜːr.tən/)",
+  "simple_pronunciation": "simplified spelled-out pronunciation (e.g., SUR-tn)",
   "definition": "concise definition",
   "etymology": "brief origin of the word",
   "example": "a single example sentence using the word"

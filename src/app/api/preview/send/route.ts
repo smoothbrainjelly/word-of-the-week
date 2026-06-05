@@ -3,7 +3,7 @@ import { generateWord } from "@/lib/gemini";
 import { sendEmail } from "@/lib/email";
 import { renderHtmlTemplate } from "@/lib/email-template";
 
-const DEFAULT_THEME = "Obscure English words — share the word, definition, etymology, and an example sentence";
+const DEFAULT_THEME = "Obscure but easy-to-pronounce English words — share the word with IPA pronunciation, definition, etymology, and an example sentence";
 
 export async function POST(request: Request) {
   const { email } = await request.json();
