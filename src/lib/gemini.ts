@@ -1,6 +1,7 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 
 let genAI: GoogleGenerativeAI | null = null;
+let model: GenerativeModel | null = null;
 
 function getGenAI(): GoogleGenerativeAI {
   if (!genAI) {
@@ -11,7 +12,12 @@ function getGenAI(): GoogleGenerativeAI {
   return genAI;
 }
 
-const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
+function getModel() {
+  if (!model) {
+    model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
+  }
+  return model;
+}
 
 type WordResult = {
   word: string;
@@ -29,7 +35,7 @@ export async function generateWord(theme: string): Promise<WordResult> {
   "example": "a single example sentence using the word"
 }`;
 
-  const result = await model.generateContent(prompt);
+  const result = await getModel().generateContent(prompt);
   const text = result.response.text().trim();
   const cleaned = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
   return JSON.parse(cleaned) as WordResult;
