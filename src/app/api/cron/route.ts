@@ -4,7 +4,7 @@ import { redis } from "@/lib/redis";
 import { generateWord } from "@/lib/gemini";
 import { sendEmail } from "@/lib/email";
 import { renderHtmlTemplate } from "@/lib/email-template";
-import { getUsers } from "@/lib/auth";
+import { getUsers, signEmailToken } from "@/lib/auth";
 import type { HistoryEntry } from "@/lib/types";
 
 const PROMPT_THEME = "Obscure English words — share the word, definition, etymology, and an example sentence";
@@ -42,11 +42,16 @@ export async function GET(request: Request) {
   const word = await generateWord(PROMPT_THEME);
   console.log("[cron] Word generated", { word: word.word });
 
-  const { html, text } = renderHtmlTemplate(word);
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
 
   let sentCount = 0;
   for (const user of active) {
     try {
+      const unsubToken = await signEmailToken(user.email);
+      const unsubUrl = `${baseUrl}/unsubscribe?token=${unsubToken}`;
+      const { html, text } = renderHtmlTemplate(word, unsubUrl);
       await sendEmail(user.email, `Word of the Week: ${word.word}`, text, html);
       sentCount++;
     } catch (e) {
