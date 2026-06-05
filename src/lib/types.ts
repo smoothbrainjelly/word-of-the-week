@@ -8,6 +8,8 @@ export type Settings = {
 export type HistoryEntry = {
   id: string;
   word: string;
+  pronunciation: string;
+  simple_pronunciation: string;
   definition: string;
   etymology: string;
   example: string;

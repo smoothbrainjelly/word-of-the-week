@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateWord } from "@/lib/gemini";
 
-const DEFAULT_THEME = "Obscure English words — share the word, definition, etymology, and an example sentence";
+const DEFAULT_THEME = "Obscure but easy-to-pronounce English words — share the word with IPA pronunciation, definition, etymology, and an example sentence";
 
 export async function POST() {
   const theme = DEFAULT_THEME;

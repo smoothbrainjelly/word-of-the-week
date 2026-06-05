@@ -30,7 +30,12 @@ export default function HistoryPage() {
         {data.entries.map((entry) => (
           <div key={entry.id} className="border rounded-lg p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">{entry.word}</h2>
+              <div>
+                <h2 className="text-xl font-bold">{entry.word}</h2>
+                {(entry.pronunciation || entry.simple_pronunciation) && (
+                  <p className="text-sm text-zinc-500">{entry.pronunciation}{entry.pronunciation && entry.simple_pronunciation ? " — " : ""}{entry.simple_pronunciation}</p>
+                )}
+              </div>
               <span className="text-xs text-zinc-400">
                 {new Date(entry.sentAt).toLocaleDateString("en-US", {
                   weekday: "long",
