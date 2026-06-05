@@ -1,39 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Settings, HistoryEntry } from "@/lib/types";
+import type { HistoryEntry } from "@/lib/types";
 import type { User } from "@/lib/auth";
 
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-function daysUntil(day: string, time: string, timezone: string): string {
-  if (!time) return "—";
-  const now = new Date();
-  const dayIndex = DAYS.indexOf(day);
-  if (dayIndex === -1) return "—";
-
-  const currentDay = now.getDay();
-  let diff = dayIndex - currentDay;
-  if (diff < 0 || (diff === 0 && now.getHours() >= parseInt(time.split(":")[0]))) {
-    diff += 7;
-  }
-
-  if (diff === 0) return "Today";
-  if (diff === 1) return "Tomorrow";
-  return `${day} (${diff} days)`;
-}
-
 export default function DashboardPage() {
-  const [settings, setSettings] = useState<Settings | null>(null);
   const [activeCount, setActiveCount] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
   const [recent, setRecent] = useState<HistoryEntry[]>([]);
 
   useEffect(() => {
-    fetch("/api/settings")
-      .then((r) => r.json())
-      .then(setSettings);
-
     fetch("/api/users")
       .then((r) => r.json())
       .then((list) => {
@@ -66,17 +42,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {settings && (
-        <div className="border rounded-lg p-4 space-y-1">
-          <p className="text-sm font-medium">Next Delivery</p>
-          <p className="text-lg font-bold">
-            {daysUntil(settings.day, settings.time, settings.timezone)}
-          </p>
-          <p className="text-sm text-zinc-500">
-            {settings.day} at {settings.time} ({settings.timezone})
-          </p>
-        </div>
-      )}
+
 
       <div className="space-y-4">
         <h2 className="text-lg font-semibold">Recent Words</h2>
