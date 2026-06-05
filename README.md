@@ -22,9 +22,8 @@ Vercel Cron (every hour)
 
 | Route | Purpose |
 |---|---|
-| `/` | Dashboard — stats, next delivery countdown, recent words |
+| `/` | Dashboard — stats, recent words |
 | `/recipients` | Manage who receives the weekly word |
-| `/settings` | Configure prompt theme, day, time, timezone |
 | `/preview` | Generate a sample word and send a test email |
 | `/history` | Browse previously sent words |
 
@@ -34,7 +33,6 @@ Vercel Cron (every hour)
 |---|---|
 | `GET/POST /api/recipients` | List and create recipients |
 | `PUT/DELETE /api/recipients/[id]` | Update or remove a recipient |
-| `GET/PUT /api/settings` | Read and update settings |
 | `POST /api/preview` | Generate a word via Gemini (no send) |
 | `POST /api/preview/send` | Generate a word and send a test email |
 | `GET /api/history` | Paginated history of sent words |

@@ -21,7 +21,6 @@ export default function NavBar() {
     <nav className="border-b">
       <div className="mx-auto px-10 py-3 flex gap-6 text-sm font-medium items-center" style={{ maxWidth: 1200 }}>
         <Link href="/" className="hover:text-zinc-600">Dashboard</Link>
-        {isAdmin && <Link href="/settings" className="hover:text-zinc-600">Settings</Link>}
         {isAdmin && <Link href="/preview" className="hover:text-zinc-600">Preview</Link>}
         {isAdmin && <Link href="/users" className="hover:text-zinc-600">Users</Link>}
         <Link href="/history" className="hover:text-zinc-600">History</Link>

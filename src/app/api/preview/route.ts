@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { generateWord } from "@/lib/gemini";
-import { redis } from "@/lib/redis";
-import type { Settings } from "@/lib/types";
+
+const DEFAULT_THEME = "Obscure English words — share the word, definition, etymology, and an example sentence";
 
 export async function POST() {
-  const settings = await redis.get<Settings>("settings");
-  const theme = settings?.promptTheme ?? "Obscure English words";
+  const theme = DEFAULT_THEME;
 
   try {
     const word = await generateWord(theme);
