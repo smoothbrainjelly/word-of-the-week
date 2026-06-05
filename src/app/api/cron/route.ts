@@ -4,7 +4,7 @@ import { redis } from "@/lib/redis";
 import { generateWord } from "@/lib/gemini";
 import { sendEmail } from "@/lib/email";
 import { renderHtmlTemplate } from "@/lib/email-template";
-import { getUsers } from "@/lib/auth";
+import { getUsers, signEmailToken } from "@/lib/auth";
 import type { HistoryEntry } from "@/lib/types";
 
 const PROMPT_THEME = "Obscure English words — share the word, definition, etymology, and an example sentence";
@@ -24,10 +24,15 @@ export async function GET(request: Request) {
   weekStart.setDate(now.getDate() - now.getDay());
   const weekKey = weekStart.toISOString().slice(0, 10);
 
-  const lastSent = await redis.get<string>("last_sent_week");
-  if (lastSent === weekKey) {
-    console.log("[cron] Already sent this week", { weekKey });
-    return NextResponse.json({ message: "Already sent this week" });
+  const forceSend = await redis.get<boolean>("force_send");
+  if (forceSend) {
+    console.log("[cron] Force-send enabled, skipping week check");
+  } else {
+    const lastSent = await redis.get<string>("last_sent_week");
+    if (lastSent === weekKey) {
+      console.log("[cron] Already sent this week", { weekKey });
+      return NextResponse.json({ message: "Already sent this week" });
+    }
   }
 
   const users = await getUsers();
@@ -42,11 +47,16 @@ export async function GET(request: Request) {
   const word = await generateWord(PROMPT_THEME);
   console.log("[cron] Word generated", { word: word.word });
 
-  const { html, text } = renderHtmlTemplate(word);
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
 
   let sentCount = 0;
   for (const user of active) {
     try {
+      const unsubToken = await signEmailToken(user.email);
+      const unsubUrl = `${baseUrl}/unsubscribe?token=${unsubToken}`;
+      const { html, text } = renderHtmlTemplate(word, unsubUrl);
       await sendEmail(user.email, `Word of the Week: ${word.word}`, text, html);
       sentCount++;
     } catch (e) {
