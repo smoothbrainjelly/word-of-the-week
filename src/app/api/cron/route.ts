@@ -69,6 +69,8 @@ export async function GET(request: Request) {
     history.push({
       id: crypto.randomUUID(),
       word: word.word,
+      pronunciation: word.pronunciation,
+      simple_pronunciation: word.simple_pronunciation,
       definition: word.definition,
       etymology: word.etymology,
       example: word.example,

@@ -2,6 +2,8 @@ import { marked } from "marked";
 
 export type WordData = {
   word: string;
+  pronunciation: string;
+  simple_pronunciation: string;
   definition: string;
   etymology: string;
   example: string;
@@ -12,6 +14,8 @@ export function renderMarkdownTemplate(word: WordData, unsubscribeUrl?: string):
     `# Word of the Week`,
     ``,
     `# ${word.word}`,
+    ``,
+    `${word.pronunciation} — ${word.simple_pronunciation}`,
     ``,
     `---`,
     ``,
