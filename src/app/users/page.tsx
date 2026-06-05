@@ -22,12 +22,11 @@ export default function UsersPage() {
     load();
   }
 
-  async function toggleRole(user: User) {
-    const newRole = user.role === "admin" ? "user" : "admin";
+  async function changeRole(user: User, role: string) {
     await fetch("/api/users", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: user.id, role: newRole }),
+      body: JSON.stringify({ userId: user.id, role }),
     });
     load();
   }
@@ -42,7 +41,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-8 space-y-6">
+    <div className="max-w-4xl mx-auto p-8 space-y-6">
       <h1 className="text-2xl font-bold">Users</h1>
 
       <table className="w-full text-sm">
@@ -61,12 +60,14 @@ export default function UsersPage() {
               <td className="py-2">{u.name}</td>
               <td className="py-2">{u.email}</td>
               <td className="py-2">
-                <button
-                  onClick={() => toggleRole(u)}
-                  className="text-xs font-mono bg-zinc-100 px-2 py-0.5 rounded"
+                <select
+                  value={u.role}
+                  onChange={(e) => changeRole(u, e.target.value)}
+                  className="text-xs font-mono border rounded px-2 py-1 bg-white"
                 >
-                  {u.role}
-                </button>
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                </select>
               </td>
               <td className="py-2">
                 <button
