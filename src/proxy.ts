@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { verifyToken } from "@/lib/auth";
 
 const AUTH_PATHS = ["/", "/history"];
-const ADMIN_PATHS = ["/schedule", "/prompts", "/preview", "/users", "/recipients"];
+const ADMIN_PATHS = ["/settings", "/preview", "/users"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
