@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Word of the Week
 
-## Getting Started
+An AI-powered app that sends you a vocabulary word with definition, etymology, and example sentence every week via email.
 
-First, run the development server:
+Built with **Next.js (App Router) + Upstash Redis + Gemini API + Gmail SMTP + Vercel Cron**.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Architecture
+
+```
+Vercel Cron (every hour)
+         ↓
+   Checks schedule (day/time/timezone from Redis)
+         ↓
+   Gemini API generates word (definition, etymology, example)
+         ↓
+   Gmail SMTP sends to all active recipients
+         ↓
+   Stored in Upstash Redis (history)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Pages
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Route | Purpose |
+|---|---|
+| `/` | Dashboard — stats, next delivery countdown, recent words |
+| `/recipients` | Manage who receives the weekly word |
+| `/settings` | Configure prompt theme, day, time, timezone |
+| `/preview` | Generate a sample word and send a test email |
+| `/history` | Browse previously sent words |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API Routes
 
-## Learn More
+| Route | Purpose |
+|---|---|
+| `GET/POST /api/recipients` | List and create recipients |
+| `PUT/DELETE /api/recipients/[id]` | Update or remove a recipient |
+| `GET/PUT /api/settings` | Read and update settings |
+| `POST /api/preview` | Generate a word via Gemini (no send) |
+| `POST /api/preview/send` | Generate a word and send a test email |
+| `GET /api/history` | Paginated history of sent words |
+| `GET /api/cron` | Scheduled delivery (protected by `CRON_SECRET`) |
 
-To learn more about Next.js, take a look at the following resources:
+## Prerequisites
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Gemini API key** — [aistudio.google.com](https://aistudio.google.com) (free tier)
+- **Upstash Redis** — [upstash.com](https://upstash.com) (free tier)
+- **Gmail account** with [2FA and an app password](https://myaccount.google.com/apppasswords)
+- **pnpm** — `npm install -g pnpm`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Setup
 
-## Deploy on Vercel
+```bash
+pnpm install
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Copy the environment template and fill in your credentials:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+cp .env.example .env
+```
+
+Required environment variables:
+
+| Variable | Description |
+|---|---|
+| `GEMINI_API_KEY` | Your Gemini API key |
+| `UPSTASH_REDIS_REST_URL` | Upstash Redis REST endpoint |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token |
+| `GMAIL_USER` | Your Gmail address |
+| `GMAIL_APP_PASSWORD` | Gmail app password |
+| `CRON_SECRET` | Random string to protect the cron endpoint |
+
+## Local Development
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). The Upstash Redis and Gemini API work locally — the only thing that won't fire is the Vercel Cron.
+
+To test the cron flow locally:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron
+```
+
+## Deployment to Vercel
+
+1. Push to GitHub
+2. Import the repo at [vercel.com/new](https://vercel.com/new)
+3. Add all environment variables in Project Settings → Environment Variables
+4. Deploy
+5. The cron (`0 * * * *`) runs every hour and checks the configured day/time before sending
