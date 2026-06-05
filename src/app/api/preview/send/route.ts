@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateWord } from "@/lib/gemini";
 import { sendEmail } from "@/lib/email";
+import { renderHtmlTemplate } from "@/lib/email-template";
 import { redis } from "@/lib/redis";
 import type { Settings } from "@/lib/types";
 
@@ -15,15 +16,8 @@ export async function POST(request: Request) {
 
   try {
     const word = await generateWord(theme);
-    const body = [
-      `Your word of the week is: ${word.word}`,
-      "",
-      `Definition: ${word.definition}`,
-      `Etymology: ${word.etymology}`,
-      `Example: ${word.example}`,
-    ].join("\n");
-
-    await sendEmail(email, `Word of the Week: ${word.word}`, body);
+    const { html, text } = renderHtmlTemplate(word);
+    await sendEmail(email, `Word of the Week: ${word.word}`, text, html);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json(
