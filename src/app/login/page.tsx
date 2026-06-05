@@ -20,7 +20,11 @@ export default function LoginPage() {
       setSent(true);
     } else {
       const data = await res.json();
-      setError(data.error || "Something went wrong");
+      if (data.error?.includes("Name is required")) {
+        setError("No account found with this email. Please sign up instead.");
+      } else {
+        setError(data.error || "Something went wrong");
+      }
     }
   }
 
