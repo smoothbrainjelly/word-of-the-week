@@ -25,6 +25,8 @@ export async function POST(request: Request) {
 
   const { html: inner } = renderHtmlTemplate(word, "#");
   const html = `<div style="max-width:600px;margin:0 auto;font-family:Georgia,serif;color:#1a1a1a;padding:40px 20px;line-height:1.6">${inner}</div>`;
+  const { html: inner } = renderHtmlTemplate(word, "#");
+  const html = `<div style="max-width:600px;margin:0 auto;font-family:Georgia,serif;color:#1a1a1a;padding:40px 20px;line-height:1.6">${inner}</div>`;
 
   return NextResponse.json({ html });
 }

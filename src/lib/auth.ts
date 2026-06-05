@@ -68,6 +68,22 @@ export async function createUser(name: string, email: string): Promise<User> {
   return user;
 }
 
+export async function signEmailToken(email: string): Promise<string> {
+  return new SignJWT({ email })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("90d")
+    .sign(getJWTSecret());
+}
+
+export async function verifyEmailToken(token: string): Promise<string | null> {
+  try {
+    const { payload } = await jwtVerify(token, getJWTSecret());
+    return (payload as { email: string }).email;
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMagicToken(email: string): Promise<string> {
   const token = crypto.randomUUID();
   const doc: MagicToken = { email, expiresAt: Date.now() + 15 * 60 * 1000 };
