@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Recipient } from "@/lib/types";
 
 type WordCard = {
@@ -18,6 +18,8 @@ export default function PreviewPage() {
   const [sent, setSent] = useState(false);
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [selectedEmail, setSelectedEmail] = useState("");
+
+  useEffect(() => { loadRecipients(); }, []);
 
   async function generate() {
     setLoading(true);
@@ -78,7 +80,6 @@ export default function PreviewPage() {
               <select
                 className="flex-1 border rounded-lg p-2 text-sm"
                 value={selectedEmail}
-                onClick={loadRecipients}
                 onChange={(e) => { setSelectedEmail(e.target.value); setSent(false); }}
               >
                 <option value="">Select a recipient</option>

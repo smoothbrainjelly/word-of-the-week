@@ -15,7 +15,12 @@ export async function PUT(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  recipients[index] = { ...recipients[index], ...body };
+  recipients[index] = {
+    ...recipients[index],
+    name: body.name ?? recipients[index].name,
+    email: body.email ?? recipients[index].email,
+    active: body.active ?? recipients[index].active,
+  };
   await redis.set("recipients", recipients);
   return NextResponse.json(recipients[index]);
 }

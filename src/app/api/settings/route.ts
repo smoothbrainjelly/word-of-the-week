@@ -16,6 +16,16 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   const body = await request.json();
+
+  const VALID_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+  if (body.day && !VALID_DAYS.includes(body.day)) {
+    return NextResponse.json({ error: "Invalid day" }, { status: 400 });
+  }
+  if (body.time && !/^\d{2}:\d{2}$/.test(body.time)) {
+    return NextResponse.json({ error: "Invalid time format (use HH:mm)" }, { status: 400 });
+  }
+
   const settings: Settings = {
     promptTheme: body.promptTheme ?? DEFAULT_SETTINGS.promptTheme,
     day: body.day ?? DEFAULT_SETTINGS.day,

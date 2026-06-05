@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Settings, HistoryEntry } from "@/lib/types";
+import type { Recipient, Settings, HistoryEntry } from "@/lib/types";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 function daysUntil(day: string, time: string, timezone: string): string {
+  if (!time) return "—";
   const now = new Date();
   const dayIndex = DAYS.indexOf(day);
   if (dayIndex === -1) return "—";
@@ -36,7 +37,7 @@ export default function DashboardPage() {
       .then((r) => r.json())
       .then((list) => {
         setTotalRecipients(list.length);
-        setActiveCount(list.filter((r: { active: boolean }) => r.active).length);
+        setActiveCount((list as Recipient[]).filter((r) => r.active).length);
       });
 
     fetch("/api/history?page=1&limit=5")

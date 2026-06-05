@@ -1,7 +1,17 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+let genAI: GoogleGenerativeAI | null = null;
+
+function getGenAI(): GoogleGenerativeAI {
+  if (!genAI) {
+    const key = process.env.GEMINI_API_KEY;
+    if (!key) throw new Error("Missing GEMINI_API_KEY");
+    genAI = new GoogleGenerativeAI(key);
+  }
+  return genAI;
+}
+
+const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
 
 type WordResult = {
   word: string;
@@ -21,5 +31,6 @@ export async function generateWord(theme: string): Promise<WordResult> {
 
   const result = await model.generateContent(prompt);
   const text = result.response.text().trim();
-  return JSON.parse(text);
+  const cleaned = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+  return JSON.parse(cleaned) as WordResult;
 }
