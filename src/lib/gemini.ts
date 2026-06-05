@@ -44,13 +44,18 @@ export async function generateWord(theme: string): Promise<WordResult> {
 
   for (const modelName of MODELS) {
     try {
+      console.log("[gemini] Calling model", { model: modelName });
       const model = ai.getGenerativeModel({ model: modelName });
+      const start = Date.now();
       const result = await model.generateContent(prompt);
+      const elapsed = Date.now() - start;
       const text = result.response.text().trim();
+      console.log("[gemini] Model succeeded", { model: modelName, elapsed });
       const cleaned = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
       return JSON.parse(cleaned) as WordResult;
     } catch (err) {
       lastError = err;
+      console.warn("[gemini] Model failed", { model: modelName, error: err instanceof Error ? err.message : String(err) });
       if (isQuotaError(err)) {
         continue;
       }
@@ -58,5 +63,6 @@ export async function generateWord(theme: string): Promise<WordResult> {
     }
   }
 
+  console.error("[gemini] All models exhausted");
   throw lastError;
 }
