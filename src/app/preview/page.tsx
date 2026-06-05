@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Recipient } from "@/lib/types";
+import type { User } from "@/lib/auth";
 
 type WordCard = {
   word: string;
@@ -16,10 +16,10 @@ export default function PreviewPage() {
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const [recipients, setRecipients] = useState<Recipient[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [selectedEmail, setSelectedEmail] = useState("");
 
-  useEffect(() => { loadRecipients(); }, []);
+  useEffect(() => { loadUsers(); }, []);
 
   async function generate() {
     setLoading(true);
@@ -46,9 +46,9 @@ export default function PreviewPage() {
     setSending(false);
   }
 
-  async function loadRecipients() {
-    const res = await fetch("/api/recipients");
-    setRecipients(await res.json());
+  async function loadUsers() {
+    const res = await fetch("/api/users");
+    if (res.ok) setUsers(await res.json());
   }
 
   return (
@@ -83,8 +83,8 @@ export default function PreviewPage() {
                 onChange={(e) => { setSelectedEmail(e.target.value); setSent(false); }}
               >
                 <option value="">Select a recipient</option>
-                {recipients.map((r) => (
-                  <option key={r.id} value={r.email}>{r.name} ({r.email})</option>
+                {users.filter((u) => u.active).map((u) => (
+                  <option key={u.id} value={u.email}>{u.name} ({u.email})</option>
                 ))}
               </select>
               <button
