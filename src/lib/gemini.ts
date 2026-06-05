@@ -1,7 +1,13 @@
-import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const MODELS = [
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-1.5-flash",
+  "gemini-1.5-pro",
+] as const;
 
 let genAI: GoogleGenerativeAI | null = null;
-let model: GenerativeModel | null = null;
 
 function getGenAI(): GoogleGenerativeAI {
   if (!genAI) {
@@ -12,11 +18,9 @@ function getGenAI(): GoogleGenerativeAI {
   return genAI;
 }
 
-function getModel() {
-  if (!model) {
-    model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
-  }
-  return model;
+function isQuotaError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return msg.includes("429") || msg.includes("quota") || msg.includes("RESOURCE_EXHAUSTED");
 }
 
 type WordResult = {
@@ -35,8 +39,24 @@ export async function generateWord(theme: string): Promise<WordResult> {
   "example": "a single example sentence using the word"
 }`;
 
-  const result = await getModel().generateContent(prompt);
-  const text = result.response.text().trim();
-  const cleaned = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
-  return JSON.parse(cleaned) as WordResult;
+  const ai = getGenAI();
+  let lastError: unknown;
+
+  for (const modelName of MODELS) {
+    try {
+      const model = ai.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt);
+      const text = result.response.text().trim();
+      const cleaned = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+      return JSON.parse(cleaned) as WordResult;
+    } catch (err) {
+      lastError = err;
+      if (isQuotaError(err)) {
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  throw lastError;
 }
