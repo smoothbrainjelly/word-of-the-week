@@ -1,23 +1,37 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { redis } from "@/lib/redis";
 import { generateWord } from "@/lib/gemini";
 import { sendEmail } from "@/lib/email";
 import type { Settings, Recipient, HistoryEntry } from "@/lib/types";
 
-function getDayName(): string {
-  return new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(new Date());
+function getDayName(timezone: string): string {
+  return new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: timezone }).format(new Date());
 }
 
-function isTimeMatch(time: string): boolean {
+function isTimeMatch(time: string, timezone: string): boolean {
   const now = new Date();
   const [h, m] = time.split(":").map(Number);
-  return now.getHours() === h && now.getMinutes() === m;
+  const hour = new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: timezone }).format(now);
+  const minute = new Intl.DateTimeFormat("en-US", { minute: "numeric", timeZone: timezone }).format(now);
+  return parseInt(hour) === h && parseInt(minute) === m;
 }
 
 export async function GET(request: Request) {
   const auth = request.headers.get("authorization");
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  const expected = `Bearer ${process.env.CRON_SECRET}`;
+  if (!auth || !crypto.timingSafeEqual(Buffer.from(auth), Buffer.from(expected))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  const weekKey = weekStart.toISOString().slice(0, 10);
+
+  const lastSent = await redis.get<string>("last_sent_week");
+  if (lastSent === weekKey) {
+    return NextResponse.json({ message: "Already sent this week" });
   }
 
   const settings = await redis.get<Settings>("settings");
@@ -25,7 +39,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No settings configured" }, { status: 400 });
   }
 
-  if (getDayName() !== settings.day || !isTimeMatch(settings.time)) {
+  if (getDayName(settings.timezone) !== settings.day || !isTimeMatch(settings.time, settings.timezone)) {
     return NextResponse.json({ message: "Not time yet" });
   }
 
@@ -44,21 +58,30 @@ export async function GET(request: Request) {
     `Example: ${word.example}`,
   ].join("\n");
 
+  let sentCount = 0;
   for (const recipient of active) {
-    await sendEmail(recipient.email, `Word of the Week: ${word.word}`, body);
+    try {
+      await sendEmail(recipient.email, `Word of the Week: ${word.word}`, body);
+      sentCount++;
+    } catch (e) {
+      console.error(`Failed to send to ${recipient.email}:`, e);
+    }
   }
 
-  const history = (await redis.get<HistoryEntry[]>("history")) ?? [];
-  history.push({
-    id: crypto.randomUUID(),
-    word: word.word,
-    definition: word.definition,
-    etymology: word.etymology,
-    example: word.example,
-    sentAt: new Date().toISOString(),
-    recipientCount: active.length,
-  });
-  await redis.set("history", history);
+  if (sentCount > 0) {
+    const history = (await redis.get<HistoryEntry[]>("history")) ?? [];
+    history.push({
+      id: crypto.randomUUID(),
+      word: word.word,
+      definition: word.definition,
+      etymology: word.etymology,
+      example: word.example,
+      sentAt: now.toISOString(),
+      recipientCount: sentCount,
+    });
+    await redis.set("history", history);
+    await redis.set("last_sent_week", weekKey);
+  }
 
-  return NextResponse.json({ success: true, word: word.word, sentTo: active.length });
+  return NextResponse.json({ success: true, word: word.word, sentTo: sentCount });
 }

@@ -11,6 +11,10 @@ export async function POST(request: Request) {
   const { name, email } = await request.json();
   const recipients = (await redis.get<Recipient[]>("recipients")) ?? [];
 
+  if (recipients.some((r) => r.email === email)) {
+    return NextResponse.json({ error: "Email already exists" }, { status: 409 });
+  }
+
   const newRecipient: Recipient = {
     id: crypto.randomUUID(),
     name,

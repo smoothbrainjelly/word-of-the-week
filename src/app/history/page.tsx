@@ -1,17 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import type { HistoryEntry } from "@/lib/types";
-
-type PageData = {
-  entries: HistoryEntry[];
-  total: number;
-  totalPages: number;
-  page: number;
-};
+import type { PaginatedHistory } from "@/lib/types";
 
 export default function HistoryPage() {
-  const [data, setData] = useState<PageData | null>(null);
+  const [data, setData] = useState<PaginatedHistory | null>(null);
   const [page, setPage] = useState(1);
 
   const load = useCallback(async () => {

@@ -21,3 +21,10 @@ export type HistoryEntry = {
   sentAt: string;
   recipientCount: number;
 };
+
+export type PaginatedHistory = {
+  entries: HistoryEntry[];
+  total: number;
+  totalPages: number;
+  page: number;
+};
