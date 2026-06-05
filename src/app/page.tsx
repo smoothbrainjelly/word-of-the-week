@@ -48,7 +48,7 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto p-8 space-y-8">
+    <div className="mx-auto p-10 space-y-8" style={{ maxWidth: 1200 }}>
       <h1 className="text-2xl font-bold">Word of the Week</h1>
 
       <div className="grid grid-cols-3 gap-4">

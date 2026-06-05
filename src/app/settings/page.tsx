@@ -36,7 +36,7 @@ export default function SettingsPage() {
   if (!settings) return <div className="p-8 text-zinc-500">Loading…</div>;
 
   return (
-    <div className="max-w-xl mx-auto p-8 space-y-6">
+    <div className="mx-auto p-10 space-y-6" style={{ maxWidth: 1200 }}>
       <h1 className="text-2xl font-bold">Settings</h1>
 
       <div className="space-y-4">
