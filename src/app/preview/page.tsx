@@ -38,6 +38,8 @@ const PLACEHOLDER_EMAIL = `<div style="max-width:600px;margin:0 auto;font-family
 <blockquote style="margin:0 0 0 16px;padding-left:16px;border-left:3px solid #ddd;font-style:italic;font-size:16px;color:#555">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</blockquote>
 <hr style="border:none;border-top:2px solid #e5e5e5;margin:24px 0">
 <p style="font-size:13px;color:#888"><a href="#" style="color:#666">Unsubscribe</a> from Word of the Week.</p>
+<hr style="border:none;border-top:2px solid #e5e5e5;margin:24px 0">
+<p style="font-size:13px;color:#888"><a href="#" style="color:#666">Unsubscribe</a> from Word of the Week.</p>
 </div>`;
 
 export default function PreviewPage() {
@@ -50,8 +52,14 @@ export default function PreviewPage() {
   const [sent, setSent] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [selectedEmail, setSelectedEmail] = useState("");
+  const [forceSend, setForceSend] = useState(false);
 
-  useEffect(() => { loadUsers(); }, []);
+  useEffect(() => {
+    loadUsers();
+    fetch("/api/admin/force-send")
+      .then((r) => r.json())
+      .then((d) => setForceSend(d.forceSend));
+  }, []);
 
   async function generate() {
     setLoading(true);
@@ -113,13 +121,33 @@ export default function PreviewPage() {
     <div className="mx-auto p-10 space-y-6" style={{ maxWidth: 1200 }}>
       <h1 className="text-2xl font-bold">Preview</h1>
 
-      <button
-        onClick={generate}
-        disabled={loading}
-        className="bg-black text-white px-6 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-      >
-        {loading ? "Generating…" : "Generate Sample Word"}
-      </button>
+      <div className="flex items-center gap-4">
+        <button
+          onClick={generate}
+          disabled={loading}
+          className="bg-black text-white px-6 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+        >
+          {loading ? "Generating…" : "Generate Sample Word"}
+        </button>
+
+        <label className="flex items-center gap-1.5 text-xs text-zinc-500 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={forceSend}
+            onChange={async (e) => {
+              const checked = e.target.checked;
+              await fetch("/api/admin/force-send", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ forceSend: checked }),
+              });
+              setForceSend(checked);
+            }}
+            className="w-3 h-3 accent-red-600"
+          />
+          <span className="text-red-600 font-medium">Bypass weekly protection</span>
+        </label>
+      </div>
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
 
