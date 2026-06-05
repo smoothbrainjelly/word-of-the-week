@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import type { User } from "@/lib/auth";
 
@@ -14,6 +14,14 @@ export default function NavBar() {
       .then((r) => r.json())
       .then((d) => setUser(d.user));
   }, [pathname]);
+
+  const toggleSubscription = useCallback(async () => {
+    const res = await fetch("/api/auth/toggle-subscription", { method: "POST" });
+    if (res.ok) {
+      const data = await res.json();
+      setUser((prev) => (prev ? { ...prev, active: data.active } : null));
+    }
+  }, []);
 
   const isAdmin = user?.role === "admin";
 
@@ -33,6 +41,15 @@ export default function NavBar() {
                   admin
                 </span>
               )}
+              <label className="flex items-center gap-1.5 text-xs text-zinc-500 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={user.active}
+                  onChange={toggleSubscription}
+                  className="w-3 h-3 accent-zinc-800"
+                />
+                Receiving emails
+              </label>
               <button
                 onClick={async () => {
                   await fetch("/api/auth/logout", { method: "POST" });
