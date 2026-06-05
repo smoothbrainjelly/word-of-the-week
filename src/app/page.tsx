@@ -1,65 +1,97 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import type { Settings, HistoryEntry } from "@/lib/types";
+
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+function daysUntil(day: string, time: string, timezone: string): string {
+  const now = new Date();
+  const dayIndex = DAYS.indexOf(day);
+  if (dayIndex === -1) return "—";
+
+  const currentDay = now.getDay();
+  let diff = dayIndex - currentDay;
+  if (diff < 0 || (diff === 0 && now.getHours() >= parseInt(time.split(":")[0]))) {
+    diff += 7;
+  }
+
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  return `${day} (${diff} days)`;
+}
+
+export default function DashboardPage() {
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [activeCount, setActiveCount] = useState(0);
+  const [totalRecipients, setTotalRecipients] = useState(0);
+  const [recent, setRecent] = useState<HistoryEntry[]>([]);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then(setSettings);
+
+    fetch("/api/recipients")
+      .then((r) => r.json())
+      .then((list) => {
+        setTotalRecipients(list.length);
+        setActiveCount(list.filter((r: { active: boolean }) => r.active).length);
+      });
+
+    fetch("/api/history?page=1&limit=5")
+      .then((r) => r.json())
+      .then((d) => setRecent(d.entries));
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="max-w-2xl mx-auto p-8 space-y-8">
+      <h1 className="text-2xl font-bold">Word of the Week</h1>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div className="border rounded-lg p-4 text-center">
+          <p className="text-2xl font-bold">{totalRecipients}</p>
+          <p className="text-xs text-zinc-500">Recipients</p>
+        </div>
+        <div className="border rounded-lg p-4 text-center">
+          <p className="text-2xl font-bold">{activeCount}</p>
+          <p className="text-xs text-zinc-500">Active</p>
+        </div>
+        <div className="border rounded-lg p-4 text-center">
+          <p className="text-2xl font-bold">{recent.length > 0 ? "✓" : "—"}</p>
+          <p className="text-xs text-zinc-500">Last Sent</p>
+        </div>
+      </div>
+
+      {settings && (
+        <div className="border rounded-lg p-4 space-y-1">
+          <p className="text-sm font-medium">Next Delivery</p>
+          <p className="text-lg font-bold">
+            {daysUntil(settings.day, settings.time, settings.timezone)}
+          </p>
+          <p className="text-sm text-zinc-500">
+            {settings.day} at {settings.time} ({settings.timezone})
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      )}
+
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Recent Words</h2>
+        {recent.length === 0 && (
+          <p className="text-zinc-400 text-sm">No words sent yet.</p>
+        )}
+        {recent.map((entry) => (
+          <div key={entry.id} className="border rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <p className="font-bold text-lg">{entry.word}</p>
+              <p className="text-xs text-zinc-400">
+                {new Date(entry.sentAt).toLocaleDateString()}
+              </p>
+            </div>
+            <p className="text-sm text-zinc-600 mt-1">{entry.definition}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
