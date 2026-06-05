@@ -7,24 +7,7 @@ import { renderHtmlTemplate } from "@/lib/email-template";
 import { getUsers } from "@/lib/auth";
 import type { HistoryEntry } from "@/lib/types";
 
-const DEFAULT_SETTINGS = {
-  promptTheme: "Obscure English words — share the word, definition, etymology, and an example sentence",
-  day: "Friday",
-  time: "17:30",
-  timezone: "America/New_York",
-};
-
-function getDayName(timezone: string): string {
-  return new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: timezone }).format(new Date());
-}
-
-function isTimeMatch(time: string, timezone: string): boolean {
-  const now = new Date();
-  const [h, m] = time.split(":").map(Number);
-  const hour = new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: timezone }).format(now);
-  const minute = new Intl.DateTimeFormat("en-US", { minute: "numeric", timeZone: timezone }).format(now);
-  return parseInt(hour) === h && parseInt(minute) === m;
-}
+const PROMPT_THEME = "Obscure English words — share the word, definition, etymology, and an example sentence";
 
 export async function GET(request: Request) {
   const auth = request.headers.get("authorization");
@@ -43,17 +26,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "Already sent this week" });
   }
 
-  if (getDayName(DEFAULT_SETTINGS.timezone) !== DEFAULT_SETTINGS.day || !isTimeMatch(DEFAULT_SETTINGS.time, DEFAULT_SETTINGS.timezone)) {
-    return NextResponse.json({ message: "Not time yet" });
-  }
-
   const users = await getUsers();
   const active = users.filter((u) => u.active);
   if (active.length === 0) {
     return NextResponse.json({ error: "No active users" }, { status: 400 });
   }
 
-  const word = await generateWord(DEFAULT_SETTINGS.promptTheme);
+  const word = await generateWord(PROMPT_THEME);
   const { html, text } = renderHtmlTemplate(word);
 
   let sentCount = 0;
