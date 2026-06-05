@@ -5,13 +5,6 @@ export type Settings = {
   timezone: string;
 };
 
-export type Recipient = {
-  id: string;
-  name: string;
-  email: string;
-  active: boolean;
-};
-
 export type HistoryEntry = {
   id: string;
   word: string;
