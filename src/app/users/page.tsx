@@ -41,38 +41,38 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-8 space-y-6">
+    <div className="mx-auto p-10 space-y-8" style={{ maxWidth: 1200 }}>
       <h1 className="text-2xl font-bold">Users</h1>
 
-      <table className="w-full text-sm">
+      <table className="w-full text-base">
         <thead>
           <tr className="border-b text-left text-zinc-500">
-            <th className="pb-2 font-medium">Name</th>
-            <th className="pb-2 font-medium">Email</th>
-            <th className="pb-2 font-medium">Role</th>
-            <th className="pb-2 font-medium">Status</th>
-            <th className="pb-2 font-medium" />
+            <th className="pb-3 font-medium">Name</th>
+            <th className="pb-3 font-medium">Email</th>
+            <th className="pb-3 font-medium">Role</th>
+            <th className="pb-3 font-medium">Status</th>
+            <th className="pb-3 font-medium" />
           </tr>
         </thead>
         <tbody>
           {users.map((u) => (
             <tr key={u.id} className="border-b">
-              <td className="py-2">{u.name}</td>
-              <td className="py-2">{u.email}</td>
-              <td className="py-2">
+              <td className="py-3 pr-6">{u.name}</td>
+              <td className="py-3 pr-6">{u.email}</td>
+              <td className="py-3 pr-6">
                 <select
                   value={u.role}
                   onChange={(e) => changeRole(u, e.target.value)}
-                  className="text-xs font-mono border rounded px-2 py-1 bg-white"
+                  className="text-sm font-mono border rounded px-3 py-1.5 bg-white"
                 >
                   <option value="user">user</option>
                   <option value="admin">admin</option>
                 </select>
               </td>
-              <td className="py-2">
+              <td className="py-3 pr-6">
                 <button
                   onClick={() => toggleActive(u)}
-                  className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  className={`text-sm font-medium px-3 py-1 rounded-full ${
                     u.active
                       ? "bg-green-100 text-green-700"
                       : "bg-zinc-100 text-zinc-500"
@@ -81,10 +81,10 @@ export default function UsersPage() {
                   {u.active ? "Active" : "Inactive"}
                 </button>
               </td>
-              <td className="py-2 text-right">
+              <td className="py-3 text-right">
                 <button
                   onClick={() => remove(u.id)}
-                  className="text-red-500 text-xs hover:underline"
+                  className="text-red-500 text-sm hover:underline"
                 >
                   Remove
                 </button>
@@ -93,7 +93,7 @@ export default function UsersPage() {
           ))}
           {users.length === 0 && (
             <tr>
-              <td colSpan={5} className="py-8 text-center text-zinc-400">
+              <td colSpan={5} className="py-12 text-center text-zinc-400 text-base">
                 No users yet.
               </td>
             </tr>

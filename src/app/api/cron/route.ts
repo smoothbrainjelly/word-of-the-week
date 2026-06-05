@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { redis } from "@/lib/redis";
 import { generateWord } from "@/lib/gemini";
 import { sendEmail } from "@/lib/email";
+import { renderHtmlTemplate } from "@/lib/email-template";
 import { getUsers } from "@/lib/auth";
 import type { Settings, HistoryEntry } from "@/lib/types";
 
@@ -47,22 +48,16 @@ export async function GET(request: Request) {
   const users = await getUsers();
   const active = users.filter((u) => u.active);
   if (active.length === 0) {
-    return NextResponse.json({ error: "No active recipients" }, { status: 400 });
+    return NextResponse.json({ error: "No active users" }, { status: 400 });
   }
 
   const word = await generateWord(settings.promptTheme);
-  const body = [
-    `Your word of the week is: ${word.word}`,
-    "",
-    `Definition: ${word.definition}`,
-    `Etymology: ${word.etymology}`,
-    `Example: ${word.example}`,
-  ].join("\n");
+  const { html, text } = renderHtmlTemplate(word);
 
   let sentCount = 0;
   for (const user of active) {
     try {
-      await sendEmail(user.email, `Word of the Week: ${word.word}`, body);
+      await sendEmail(user.email, `Word of the Week: ${word.word}`, text, html);
       sentCount++;
     } catch (e) {
       console.error(`Failed to send to ${user.email}:`, e);

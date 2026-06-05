@@ -19,7 +19,7 @@ export default function HistoryPage() {
   if (!data) return <div className="p-8 text-zinc-500">Loading…</div>;
 
   return (
-    <div className="max-w-2xl mx-auto p-8 space-y-6">
+    <div className="mx-auto p-10 space-y-6" style={{ maxWidth: 1200 }}>
       <h1 className="text-2xl font-bold">History</h1>
 
       {data.entries.length === 0 && (

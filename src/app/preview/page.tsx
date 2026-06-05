@@ -10,8 +10,34 @@ type WordCard = {
   example: string;
 };
 
+const PLACEHOLDER_COMPACT = `<div style="font-family:Georgia,serif;color:#1a1a1a;line-height:1.5">
+<div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:2px">Word of the Day</div>
+<div style="font-size:28px;font-weight:700;margin-bottom:12px">Lorem Ipsum</div>
+<hr style="border:none;border-top:1px solid #e5e5e5;margin:0 0 12px">
+<div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:2px">Definition</div>
+<div style="font-size:14px;margin-bottom:12px">Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.</div>
+<div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:2px">Etymology</div>
+<div style="font-size:14px;margin-bottom:12px">From Latin <em>ipsum</em>, meaning "itself".</div>
+<div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:2px">Example</div>
+<blockquote style="margin:0 0 0 12px;padding-left:12px;border-left:2px solid #ddd;font-style:italic;font-size:14px;color:#555">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</blockquote>
+</div>`;
+
+const PLACEHOLDER_EMAIL = `<div style="max-width:600px;margin:0 auto;font-family:Georgia,serif;color:#1a1a1a;padding:40px 20px;line-height:1.6">
+<h1 style="font-size:14px;text-transform:uppercase;letter-spacing:2px;color:#888;margin:0 0 8px">Word of the Day</h1>
+<h2 style="font-size:36px;margin:0 0 24px;font-weight:700">Lorem Ipsum</h2>
+<hr style="border:none;border-top:2px solid #e5e5e5;margin:0 0 24px">
+<h3 style="font-size:14px;text-transform:uppercase;letter-spacing:1px;color:#888;margin:0 0 4px">Definition</h3>
+<p style="margin:0 0 20px;font-size:16px">Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.</p>
+<h3 style="font-size:14px;text-transform:uppercase;letter-spacing:1px;color:#888;margin:0 0 4px">Etymology</h3>
+<p style="margin:0 0 20px;font-size:16px">From Latin <em>ipsum</em>, meaning "itself".</p>
+<h3 style="font-size:14px;text-transform:uppercase;letter-spacing:1px;color:#888;margin:0 0 4px">Example</h3>
+<blockquote style="margin:0 0 0 16px;padding-left:16px;border-left:3px solid #ddd;font-style:italic;font-size:16px;color:#555">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</blockquote>
+</div>`;
+
 export default function PreviewPage() {
   const [word, setWord] = useState<WordCard | null>(null);
+  const [cardHtml, setCardHtml] = useState("");
+  const [emailHtml, setEmailHtml] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
@@ -24,13 +50,39 @@ export default function PreviewPage() {
   async function generate() {
     setLoading(true);
     setError("");
-    setWord(null);
+
     const res = await fetch("/api/preview", { method: "POST" });
     if (!res.ok) {
       setError((await res.json()).error);
-    } else {
-      setWord(await res.json());
+      setLoading(false);
+      return;
     }
+
+    const w = await res.json();
+    setWord(w);
+
+    const [cardRes, emailRes] = await Promise.all([
+      fetch("/api/preview/render", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...w, compact: true }),
+      }),
+      fetch("/api/preview/render", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...w, compact: false }),
+      }),
+    ]);
+
+    if (cardRes.ok) {
+      const { html } = await cardRes.json();
+      setCardHtml(html);
+    }
+    if (emailRes.ok) {
+      const { html } = await emailRes.json();
+      setEmailHtml(html);
+    }
+
     setLoading(false);
   }
 
@@ -52,7 +104,7 @@ export default function PreviewPage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto p-8 space-y-6">
+    <div className="mx-auto p-10 space-y-6" style={{ maxWidth: 1200 }}>
       <h1 className="text-2xl font-bold">Preview</h1>
 
       <button
@@ -63,18 +115,25 @@ export default function PreviewPage() {
         {loading ? "Generating…" : "Generate Sample Word"}
       </button>
 
-      {error && (
-        <p className="text-red-500 text-sm">{error}</p>
-      )}
+      {error && <p className="text-red-500 text-sm">{error}</p>}
 
-      {word && (
-        <div className="border rounded-lg p-6 space-y-3">
-          <h2 className="text-3xl font-bold">{word.word}</h2>
-          <p><span className="font-medium">Definition:</span> {word.definition}</p>
-          <p><span className="font-medium">Etymology:</span> {word.etymology}</p>
-          <p><span className="font-medium">Example:</span> <em>{word.example}</em></p>
+      <div className="grid grid-cols-2 gap-6">
+        <div className="border rounded-lg p-4 bg-white">
+          <div className="bg-zinc-50 -mx-4 -mt-4 px-4 py-1.5 border-b text-xs text-zinc-500 font-medium mb-3">
+            Card Preview
+          </div>
+          <div dangerouslySetInnerHTML={{ __html: cardHtml || PLACEHOLDER_COMPACT }} />
+        </div>
 
-          <div className="pt-4 border-t space-y-2">
+        <div className="border rounded-lg bg-white overflow-hidden">
+          <div className="bg-zinc-50 border-b px-4 py-1.5 text-xs text-zinc-500 font-medium">
+            Email Preview
+          </div>
+          <div className="p-4" dangerouslySetInnerHTML={{ __html: emailHtml || PLACEHOLDER_EMAIL }} />
+        </div>
+
+        {word && (
+          <div className="col-span-2 border rounded-lg p-4 space-y-2">
             <label className="block text-sm font-medium">Send test email to:</label>
             <div className="flex gap-2">
               <select
@@ -96,8 +155,8 @@ export default function PreviewPage() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
