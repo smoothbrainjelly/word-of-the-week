@@ -5,7 +5,14 @@ import { generateWord } from "@/lib/gemini";
 import { sendEmail } from "@/lib/email";
 import { renderHtmlTemplate } from "@/lib/email-template";
 import { getUsers } from "@/lib/auth";
-import type { Settings, HistoryEntry } from "@/lib/types";
+import type { HistoryEntry } from "@/lib/types";
+
+const DEFAULT_SETTINGS = {
+  promptTheme: "Obscure English words — share the word, definition, etymology, and an example sentence",
+  day: "Friday",
+  time: "17:30",
+  timezone: "America/New_York",
+};
 
 function getDayName(timezone: string): string {
   return new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: timezone }).format(new Date());
@@ -36,12 +43,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "Already sent this week" });
   }
 
-  const settings = await redis.get<Settings>("settings");
-  if (!settings) {
-    return NextResponse.json({ error: "No settings configured" }, { status: 400 });
-  }
-
-  if (getDayName(settings.timezone) !== settings.day || !isTimeMatch(settings.time, settings.timezone)) {
+  if (getDayName(DEFAULT_SETTINGS.timezone) !== DEFAULT_SETTINGS.day || !isTimeMatch(DEFAULT_SETTINGS.time, DEFAULT_SETTINGS.timezone)) {
     return NextResponse.json({ message: "Not time yet" });
   }
 
@@ -51,7 +53,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No active users" }, { status: 400 });
   }
 
-  const word = await generateWord(settings.promptTheme);
+  const word = await generateWord(DEFAULT_SETTINGS.promptTheme);
   const { html, text } = renderHtmlTemplate(word);
 
   let sentCount = 0;
