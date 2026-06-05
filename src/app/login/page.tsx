@@ -56,6 +56,23 @@ export default function LoginPage() {
           Send magic link
         </button>
       </form>
+
+      {process.env.NODE_ENV === "development" && (
+        <button
+          onClick={async () => {
+            const res = await fetch("/api/auth/dev-login", { method: "POST" });
+            if (res.ok) {
+              window.location.href = "/";
+            } else {
+              const data = await res.json();
+              setError(data.error || "Dev login failed");
+            }
+          }}
+          className="w-full border border-zinc-300 text-zinc-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-50"
+        >
+          Dev login (ja63604@gmail.com)
+        </button>
+      )}
       <p className="text-sm text-zinc-500 text-center">
         Don&apos;t have an account?{" "}
         <Link href="/signup" className="underline">Sign up</Link>
