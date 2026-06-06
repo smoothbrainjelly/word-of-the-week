@@ -6,7 +6,7 @@ Built with **Next.js 16 (App Router)**, **Upstash Redis**, **Gemini API**, **Gma
 
 [![CI](https://github.com/smoothbrainjelly/word-of-the-week/actions/workflows/ci.yml/badge.svg)](https://github.com/smoothbrainjelly/word-of-the-week/actions/workflows/ci.yml)
 
-> **Note:** The CI badge will show once the workflow runs after your first push.
+> **Note:** The CI badge will show once the workflow has run on your default branch.
 
 ## Features
 
@@ -58,6 +58,8 @@ Fill in your `.env`:
 | `GMAIL_APP_PASSWORD` | Gmail app password |
 | `CRON_SECRET` | Random string to protect the cron endpoint |
 | `JWT_SECRET` | Random string for signing auth tokens |
+| `DEV_EMAIL` | Email address for dev login (local only) |
+| `NEXT_PUBLIC_DEV_EMAIL` | Same email, exposed to client for dev button (local only) |
 
 ### Development
 
@@ -85,9 +87,9 @@ pnpm start
 ## Architecture
 
 ```
-Vercel Cron (every hour)
+Vercel Cron (Sunday 23:00 UTC)
          ↓
-   Checks schedule (day/time/timezone from Redis)
+   Checks weekly guard (avoids double-send)
          ↓
    Gemini API generates word (definition, etymology, example, pronunciation)
          ↓
@@ -104,6 +106,7 @@ Vercel Cron (every hour)
 | `GET /api/auth/verify` | Verify magic token and set session |
 | `GET /api/auth/me` | Get current user |
 | `POST /api/auth/dev-login` | Dev-only instant login |
+| `POST /api/auth/logout` | Clear session cookie |
 | `POST /api/auth/toggle-subscription` | Toggle user subscription |
 | `GET /api/cron` | Scheduled word delivery (protected) |
 | `GET /api/history` | Paginated word history |
@@ -122,7 +125,7 @@ Vercel Cron (every hour)
 2. Import repo at [vercel.com/new](https://vercel.com/new)
 3. Add all environment variables in Project Settings
 4. Deploy
-5. The cron (`0 * * * *`) runs every hour and checks the configured schedule
+5. The cron fires every Sunday at 23:00 UTC and sends the weekly word to active subscribers
 
 ## License
 
