@@ -12,7 +12,7 @@ const PROMPT_THEME = "Obscure English words — share the word, definition, etym
 export async function GET(request: Request) {
   const auth = request.headers.get("authorization");
   const expected = `Bearer ${process.env.CRON_SECRET}`;
-  if (!auth || !crypto.timingSafeEqual(Buffer.from(auth), Buffer.from(expected))) {
+  if (!auth || auth.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(auth), Buffer.from(expected))) {
     console.warn("[cron] Unauthorized attempt");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

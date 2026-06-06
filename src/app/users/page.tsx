@@ -11,7 +11,10 @@ export default function UsersPage() {
     if (res.ok) setUsers(await res.json());
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, [load]);
 
   async function toggleActive(user: User) {
     await fetch("/api/users", {

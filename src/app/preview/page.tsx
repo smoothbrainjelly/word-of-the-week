@@ -54,7 +54,13 @@ export default function PreviewPage() {
   const [selectedEmail, setSelectedEmail] = useState("");
   const [forceSend, setForceSend] = useState(false);
 
+  async function loadUsers() {
+    const res = await fetch("/api/users");
+    if (res.ok) setUsers(await res.json());
+  }
+
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadUsers();
     fetch("/api/admin/force-send")
       .then((r) => r.json())
@@ -110,11 +116,6 @@ export default function PreviewPage() {
     });
     if (res.ok) setSent(true);
     setSending(false);
-  }
-
-  async function loadUsers() {
-    const res = await fetch("/api/users");
-    if (res.ok) setUsers(await res.json());
   }
 
   return (
