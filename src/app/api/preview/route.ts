@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { generateWord } from "@/lib/gemini";
 import { requireAuth } from "@/lib/auth";
 
-const DEFAULT_THEME = "Obscure but easy-to-pronounce English words — share the word with IPA pronunciation, definition, etymology, and an example sentence";
+const DEFAULT_THEME = "English words that are familiar but not everyday vocabulary — share the word with IPA pronunciation, definition, etymology, and an example sentence";
 
 export async function POST() {
   const user = await requireAuth();

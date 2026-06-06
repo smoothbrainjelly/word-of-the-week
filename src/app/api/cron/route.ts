@@ -7,7 +7,7 @@ import { renderHtmlTemplate } from "@/lib/email-template";
 import { getUsers, signEmailToken } from "@/lib/auth";
 import type { HistoryEntry } from "@/lib/types";
 
-const PROMPT_THEME = "Obscure English words — share the word, definition, etymology, and an example sentence";
+const PROMPT_THEME = "English words that are familiar but not everyday vocabulary — share the word with IPA pronunciation, definition, etymology, and an example sentence";
 
 export async function GET(request: Request) {
   const auth = request.headers.get("authorization");
