@@ -4,7 +4,7 @@ import { sendEmail } from "@/lib/email";
 import { renderHtmlTemplate } from "@/lib/email-template";
 import { requireAuth, signEmailToken } from "@/lib/auth";
 
-const DEFAULT_THEME = "Obscure but easy-to-pronounce English words — share the word with IPA pronunciation, definition, etymology, and an example sentence";
+const DEFAULT_THEME = "English words that are familiar but not everyday vocabulary — share the word with IPA pronunciation, definition, etymology, and an example sentence";
 
 export async function POST(request: Request) {
   const user = await requireAuth();
