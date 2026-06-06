@@ -1,19 +1,22 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 function VerifyHandler() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (token) {
-      window.location.href = `/api/auth/verify?token=${token}`;
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    if (!token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setError(true);
+      return;
     }
-  }, [token]);
+    window.location.href = `/api/auth/verify?token=${token}`;
+  }, []);
 
-  if (!token) {
+  if (error) {
     return (
       <div className="max-w-sm mx-auto p-8 pt-20 text-center space-y-4">
         <h1 className="text-2xl font-bold">Verification failed</h1>
