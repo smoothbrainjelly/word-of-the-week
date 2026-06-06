@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { generateWord } from "@/lib/gemini";
+import { requireAuth } from "@/lib/auth";
 
-const DEFAULT_THEME = "Obscure but easy-to-pronounce English words — share the word with IPA pronunciation, definition, etymology, and an example sentence";
+const DEFAULT_THEME = "English words that are familiar but not everyday vocabulary — share the word with IPA pronunciation, definition, etymology, and an example sentence";
 
 export async function POST() {
+  const user = await requireAuth();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const theme = DEFAULT_THEME;
 
   try {
@@ -28,7 +34,7 @@ export async function POST() {
     }
 
     return NextResponse.json(
-      { error: `Failed to generate word: ${message}` },
+      { error: "Failed to generate word. Check your Gemini API key and quota." },
       { status: 500 }
     );
   }

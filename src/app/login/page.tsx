@@ -6,10 +6,13 @@ import Link from "next/link";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (sending) return;
+    setSending(true);
     setError("");
     const res = await fetch("/api/auth/send-link", {
       method: "POST",
@@ -26,6 +29,7 @@ export default function LoginPage() {
         setError(data.error || "Something went wrong");
       }
     }
+    setSending(false);
   }
 
   if (sent) {
@@ -52,12 +56,12 @@ export default function LoginPage() {
           required
         />
         {error && <p className="text-red-500 text-sm">{error}</p>}
-        <button className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium w-full">
-          Send magic link
+        <button disabled={sending} className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium w-full disabled:opacity-50">
+          {sending ? "Sending…" : "Send magic link"}
         </button>
       </form>
 
-      {process.env.NODE_ENV === "development" && (
+      {process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_DEV_EMAIL && (
         <button
           onClick={async () => {
             const res = await fetch("/api/auth/dev-login", { method: "POST" });
@@ -70,7 +74,7 @@ export default function LoginPage() {
           }}
           className="w-full border border-zinc-300 text-zinc-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-50"
         >
-          Dev login (ja63604@gmail.com)
+          Dev login ({process.env.NEXT_PUBLIC_DEV_EMAIL})
         </button>
       )}
       <p className="text-sm text-zinc-500 text-center">

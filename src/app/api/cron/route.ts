@@ -7,12 +7,12 @@ import { renderHtmlTemplate } from "@/lib/email-template";
 import { getUsers, signEmailToken } from "@/lib/auth";
 import type { HistoryEntry } from "@/lib/types";
 
-const PROMPT_THEME = "Obscure English words — share the word, definition, etymology, and an example sentence";
+const PROMPT_THEME = "English words that are familiar but not everyday vocabulary — share the word with IPA pronunciation, definition, etymology, and an example sentence";
 
 export async function GET(request: Request) {
   const auth = request.headers.get("authorization");
   const expected = `Bearer ${process.env.CRON_SECRET}`;
-  if (!auth || !crypto.timingSafeEqual(Buffer.from(auth), Buffer.from(expected))) {
+  if (!auth || auth.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(auth), Buffer.from(expected))) {
     console.warn("[cron] Unauthorized attempt");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
       await sendEmail(user.email, `Word of the Week: ${word.word}`, text, html);
       sentCount++;
     } catch (e) {
-      console.error(`[cron] Failed to send to ${user.email}:`, e);
+      console.error(`[cron] Failed to send to ${user.email.slice(0, 3)}***:`, e);
     }
   }
 

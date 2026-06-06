@@ -1,26 +1,26 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 
 function VerifyHandler() {
-  const searchParams = useSearchParams();
-  const [error, setError] = useState("");
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
     if (!token) {
-      setError("Missing verification token");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setError(true);
       return;
     }
     window.location.href = `/api/auth/verify?token=${token}`;
-  }, [searchParams]);
+  }, []);
 
   if (error) {
     return (
       <div className="max-w-sm mx-auto p-8 pt-20 text-center space-y-4">
         <h1 className="text-2xl font-bold">Verification failed</h1>
-        <p className="text-red-500 text-sm">{error}</p>
+        <p className="text-red-500 text-sm">Missing verification token</p>
       </div>
     );
   }
