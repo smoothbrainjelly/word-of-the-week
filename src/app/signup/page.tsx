@@ -7,10 +7,13 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (sending) return;
+    setSending(true);
     setError("");
     const res = await fetch("/api/auth/send-link", {
       method: "POST",
@@ -23,6 +26,7 @@ export default function SignupPage() {
       const data = await res.json();
       setError(data.error || "Something went wrong");
     }
+    setSending(false);
   }
 
   if (sent) {
@@ -56,8 +60,8 @@ export default function SignupPage() {
           required
         />
         {error && <p className="text-red-500 text-sm">{error}</p>}
-        <button className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium w-full">
-          Send magic link
+        <button disabled={sending} className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium w-full disabled:opacity-50">
+          {sending ? "Sending…" : "Send magic link"}
         </button>
       </form>
       <p className="text-sm text-zinc-500 text-center">
