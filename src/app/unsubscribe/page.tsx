@@ -7,14 +7,11 @@ import Link from "next/link";
 function UnsubscribeContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "success" | "error">(token ? "loading" : "error");
   const [email, setEmail] = useState("");
 
   useEffect(() => {
-    if (!token) {
-      setStatus("error");
-      return;
-    }
+    if (!token) return;
 
     fetch(`/api/unsubscribe?token=${token}`)
       .then((r) => r.json())

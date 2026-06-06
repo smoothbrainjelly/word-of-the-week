@@ -2,11 +2,15 @@ import { NextResponse } from "next/server";
 import { generateWord } from "@/lib/gemini";
 import { sendEmail } from "@/lib/email";
 import { renderHtmlTemplate } from "@/lib/email-template";
-import { signEmailToken } from "@/lib/auth";
+import { requireAuth, signEmailToken } from "@/lib/auth";
 
 const DEFAULT_THEME = "Obscure but easy-to-pronounce English words — share the word with IPA pronunciation, definition, etymology, and an example sentence";
 
 export async function POST(request: Request) {
+  const user = await requireAuth();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const { email } = await request.json();
   if (!email) {
     return NextResponse.json({ error: "Email is required" }, { status: 400 });

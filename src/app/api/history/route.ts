@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { redis } from "@/lib/redis";
+import { requireAuth } from "@/lib/auth";
 import type { HistoryEntry } from "@/lib/types";
 
 export async function GET(request: Request) {
+  const user = await requireAuth();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const { searchParams } = new URL(request.url);
   let page = parseInt(searchParams.get("page") ?? "1");
   let limit = parseInt(searchParams.get("limit") ?? "10");

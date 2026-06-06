@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify } from "jose";
+import { cookies } from "next/headers";
 import { redis } from "./redis";
 
 export type Role = "user" | "admin";
@@ -37,6 +38,27 @@ export async function verifyToken(token: string): Promise<{ userId: string; role
   } catch {
     return null;
   }
+}
+
+export async function requireAuth(): Promise<{ userId: string; role: Role } | null> {
+  const cookieStore = await cookies();
+  const session = cookieStore.get("session");
+  if (!session) return null;
+  return verifyToken(session.value);
+}
+
+export async function requireAdmin(): Promise<{ userId: string; role: Role } | null> {
+  const user = await requireAuth();
+  return user?.role === "admin" ? user : null;
+}
+
+export function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
 }
 
 export async function getUsers(): Promise<User[]> {

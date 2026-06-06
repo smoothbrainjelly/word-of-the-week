@@ -57,7 +57,7 @@ export default function LoginPage() {
         </button>
       </form>
 
-      {process.env.NODE_ENV === "development" && (
+      {process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_DEV_EMAIL && (
         <button
           onClick={async () => {
             const res = await fetch("/api/auth/dev-login", { method: "POST" });
@@ -70,7 +70,7 @@ export default function LoginPage() {
           }}
           className="w-full border border-zinc-300 text-zinc-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-50"
         >
-          Dev login (ja63604@gmail.com)
+          Dev login ({process.env.NEXT_PUBLIC_DEV_EMAIL})
         </button>
       )}
       <p className="text-sm text-zinc-500 text-center">
