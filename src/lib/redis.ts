@@ -8,4 +8,14 @@ function createRedisClient(): Redis {
   return new Redis({ url, token });
 }
 
-export const redis = createRedisClient();
+let client: Redis | null = null;
+
+export const redis = new Proxy<Redis>(
+  {} as Redis,
+  {
+    get(target, prop: string | symbol) {
+      if (!client) client = createRedisClient();
+      return Reflect.get(client, prop, target);
+    },
+  }
+);
