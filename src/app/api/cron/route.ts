@@ -60,7 +60,7 @@ export async function GET(request: Request) {
       await sendEmail(user.email, `Word of the Week: ${word.word}`, text, html);
       sentCount++;
     } catch (e) {
-      console.error(`[cron] Failed to send to ${user.email}:`, e);
+      console.error(`[cron] Failed to send to ${user.email.slice(0, 3)}***:`, e);
     }
   }
 
