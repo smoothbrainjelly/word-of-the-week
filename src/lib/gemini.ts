@@ -18,9 +18,9 @@ function getGenAI(): GoogleGenerativeAI {
   return genAI;
 }
 
-function isQuotaError(err: unknown): boolean {
+function isRetryableError(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
-  return msg.includes("429") || msg.includes("quota") || msg.includes("RESOURCE_EXHAUSTED");
+  return msg.includes("429") || msg.includes("quota") || msg.includes("RESOURCE_EXHAUSTED") || msg.includes("503") || msg.includes("high demand");
 }
 
 type WordResult = {
@@ -64,7 +64,7 @@ export async function generateWord(theme: string, avoidWords: Set<string> = new 
     } catch (err) {
       lastError = err;
       console.warn("[gemini] Model failed", { model: modelName, error: err instanceof Error ? err.message : String(err) });
-      if (isQuotaError(err)) {
+      if (isRetryableError(err)) {
         continue;
       }
       throw err;
