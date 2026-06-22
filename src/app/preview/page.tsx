@@ -106,13 +106,15 @@ export default function PreviewPage() {
     setLoading(false);
   }
 
-  async function handleTestSend() {
-    if (!selectedEmail || !word) return;
+  async function handleTestSend(sendToAll = false) {
+    const target = sendToAll ? "__all__" : selectedEmail;
+    if (!target || !word) return;
     setSending(true);
+    setSent(false);
     const res = await fetch("/api/preview/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: selectedEmail }),
+      body: JSON.stringify({ email: target }),
     });
     if (res.ok) setSent(true);
     setSending(false);
@@ -182,11 +184,18 @@ export default function PreviewPage() {
                 ))}
               </select>
               <button
-                onClick={handleTestSend}
+                onClick={() => handleTestSend(false)}
                 disabled={!selectedEmail || sending}
                 className="bg-zinc-800 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
               >
-                {sending ? "Sending…" : sent ? "Sent!" : "Send"}
+                {sending && !sent ? "Sending…" : sent ? "Sent!" : "Send"}
+              </button>
+              <button
+                onClick={() => handleTestSend(true)}
+                disabled={sending}
+                className="bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+              >
+                Send to all active
               </button>
             </div>
           </div>
