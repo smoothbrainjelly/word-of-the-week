@@ -109,18 +109,15 @@ export async function verifyEmailToken(token: string): Promise<string | null> {
 export async function generateMagicToken(email: string): Promise<string> {
   const token = crypto.randomUUID();
   const doc: MagicToken = { email, expiresAt: Date.now() + 15 * 60 * 1000 };
-  const tokens = (await redis.get<Record<string, MagicToken>>("magic_tokens")) ?? {};
-  tokens[token] = doc;
-  await redis.set("magic_tokens", tokens);
+  await redis.hset("magic_tokens", { [token]: JSON.stringify(doc) });
   return token;
 }
 
 export async function consumeMagicToken(token: string): Promise<string | null> {
-  const tokens = (await redis.get<Record<string, MagicToken>>("magic_tokens")) ?? {};
-  const doc = tokens[token];
-  if (!doc) return null;
-  delete tokens[token];
-  await redis.set("magic_tokens", tokens);
+  const raw = await redis.hget<string>("magic_tokens", token);
+  if (!raw) return null;
+  await redis.hdel("magic_tokens", token);
+  const doc: MagicToken = JSON.parse(raw);
   if (Date.now() > doc.expiresAt) return null;
   return doc.email;
 }
