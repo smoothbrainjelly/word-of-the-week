@@ -5,6 +5,7 @@ import { generateWord } from "@/lib/gemini";
 import { sendEmail } from "@/lib/email";
 import { renderHtmlTemplate } from "@/lib/email-template";
 import { getUsers, signEmailToken } from "@/lib/auth";
+import { getUsedWords, addUsedWord } from "@/lib/used-words";
 import type { HistoryEntry } from "@/lib/types";
 
 const PROMPT_THEME = "English words that are familiar but not everyday vocabulary — share the word with IPA pronunciation, definition, etymology, and an example sentence";
@@ -44,8 +45,8 @@ export async function GET(request: Request) {
 
   console.log("[cron] Active users", { count: active.length });
 
-  const usedWords = await redis.smembers("used_words");
-  const word = await generateWord(PROMPT_THEME, new Set(usedWords));
+  const usedWords = await getUsedWords();
+  const word = await generateWord(PROMPT_THEME, usedWords);
   console.log("[cron] Word generated", { word: word.word });
 
   const baseUrl = process.env.VERCEL_URL
@@ -79,7 +80,7 @@ export async function GET(request: Request) {
       recipientCount: sentCount,
     });
     await redis.set("history", history);
-    await redis.sadd("used_words", word.word.toLowerCase());
+    await addUsedWord(word.word);
     await redis.set("last_sent_week", weekKey);
   }
 

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { generateWord } from "@/lib/gemini";
-import { redis } from "@/lib/redis";
 import { sendEmail } from "@/lib/email";
 import { renderHtmlTemplate } from "@/lib/email-template";
 import { requireAuth, signEmailToken } from "@/lib/auth";
+import { getUsedWords } from "@/lib/used-words";
 
 const DEFAULT_THEME = "English words that are familiar but not everyday vocabulary — share the word with IPA pronunciation, definition, etymology, and an example sentence";
 
@@ -20,8 +20,8 @@ export async function POST(request: Request) {
   const theme = DEFAULT_THEME;
 
   try {
-    const usedWords = await redis.smembers("used_words");
-    const word = await generateWord(theme, new Set(usedWords));
+    const usedWords = await getUsedWords();
+    const word = await generateWord(theme, usedWords);
     const baseUrl = process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
       : "http://localhost:3000";
