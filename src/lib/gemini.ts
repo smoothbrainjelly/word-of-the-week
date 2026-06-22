@@ -32,8 +32,8 @@ type WordResult = {
   example: string;
 };
 
-export async function generateWord(theme: string): Promise<WordResult> {
-  const prompt = `You are a "Word of the Week" generator. Given this theme: "${theme}", pick a fitting word and return JSON (no markdown, no backticks) with:
+export async function generateWord(theme: string, avoidWords: Set<string> = new Set()): Promise<WordResult> {
+  let prompt = `You are a "Word of the Week" generator. Given this theme: "${theme}", pick a fitting word and return JSON (no markdown, no backticks) with:
 {
   "word": "the word",
   "pronunciation": "phonetic pronunciation in IPA (e.g., /ˈsɜːr.tən/)",
@@ -42,6 +42,10 @@ export async function generateWord(theme: string): Promise<WordResult> {
   "etymology": "brief origin of the word",
   "example": "a single example sentence using the word"
 }`;
+
+  if (avoidWords.size > 0) {
+    prompt += `\n\nIMPORTANT: Do NOT pick any of these already-used words: ${[...avoidWords].join(", ")}. Choose a completely different word.`;
+  }
 
   const ai = getGenAI();
   let lastError: unknown;
