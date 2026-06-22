@@ -14,7 +14,7 @@ export async function POST() {
   const theme = DEFAULT_THEME;
 
   try {
-    const usedWords = await redis.smembers<string>("used_words");
+    const usedWords = await redis.smembers("used_words");
     const word = await generateWord(theme, new Set(usedWords));
     return NextResponse.json(word);
   } catch (err) {

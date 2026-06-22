@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   const theme = DEFAULT_THEME;
 
   try {
-    const usedWords = await redis.smembers<string>("used_words");
+    const usedWords = await redis.smembers("used_words");
     const word = await generateWord(theme, new Set(usedWords));
     const baseUrl = process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`

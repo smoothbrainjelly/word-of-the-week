@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 
   console.log("[cron] Active users", { count: active.length });
 
-  const usedWords = await redis.smembers<string>("used_words");
+  const usedWords = await redis.smembers("used_words");
   const word = await generateWord(PROMPT_THEME, new Set(usedWords));
   console.log("[cron] Word generated", { word: word.word });
 
