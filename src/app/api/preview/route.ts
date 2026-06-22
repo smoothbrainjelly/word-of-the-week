@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateWord } from "@/lib/gemini";
-import { redis } from "@/lib/redis";
 import { requireAuth } from "@/lib/auth";
+import { getUsedWords } from "@/lib/used-words";
 
 const DEFAULT_THEME = "English words that are familiar but not everyday vocabulary — share the word with IPA pronunciation, definition, etymology, and an example sentence";
 
@@ -14,8 +14,8 @@ export async function POST() {
   const theme = DEFAULT_THEME;
 
   try {
-    const usedWords = await redis.smembers("used_words");
-    const word = await generateWord(theme, new Set(usedWords));
+    const usedWords = await getUsedWords();
+    const word = await generateWord(theme, usedWords);
     return NextResponse.json(word);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
