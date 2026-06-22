@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateWord } from "@/lib/gemini";
+import { redis } from "@/lib/redis";
 import { sendEmail } from "@/lib/email";
 import { renderHtmlTemplate } from "@/lib/email-template";
 import { requireAuth, signEmailToken } from "@/lib/auth";
@@ -19,7 +20,8 @@ export async function POST(request: Request) {
   const theme = DEFAULT_THEME;
 
   try {
-    const word = await generateWord(theme);
+    const usedWords = await redis.smembers("used_words");
+    const word = await generateWord(theme, new Set(usedWords));
     const baseUrl = process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
       : "http://localhost:3000";

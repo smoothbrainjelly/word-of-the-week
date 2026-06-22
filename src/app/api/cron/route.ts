@@ -44,7 +44,8 @@ export async function GET(request: Request) {
 
   console.log("[cron] Active users", { count: active.length });
 
-  const word = await generateWord(PROMPT_THEME);
+  const usedWords = await redis.smembers("used_words");
+  const word = await generateWord(PROMPT_THEME, new Set(usedWords));
   console.log("[cron] Word generated", { word: word.word });
 
   const baseUrl = process.env.VERCEL_URL
@@ -78,6 +79,7 @@ export async function GET(request: Request) {
       recipientCount: sentCount,
     });
     await redis.set("history", history);
+    await redis.sadd("used_words", word.word.toLowerCase());
     await redis.set("last_sent_week", weekKey);
   }
 
