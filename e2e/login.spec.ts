@@ -5,7 +5,8 @@ test.describe("Login page", () => {
     await page.goto("/login");
     await expect(page.locator("h1")).toContainText("Sign in");
     await expect(page.locator('input[placeholder="Email"]')).toBeVisible();
-    await expect(page.locator('button:has-text("Send magic link")')).toBeVisible();
+    await expect(page.locator('input[placeholder="Password"]')).toBeVisible();
+    await expect(page.locator('button:has-text("Sign in")')).toBeVisible();
   });
 
   test("has link to sign up", async ({ page }) => {

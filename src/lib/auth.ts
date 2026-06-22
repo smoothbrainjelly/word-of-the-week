@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import crypto from "crypto";
 import { redis } from "./redis";
 
 export type Role = "user" | "admin";
@@ -11,11 +12,7 @@ export type User = {
   role: Role;
   active: boolean;
   createdAt: string;
-};
-
-export type MagicToken = {
-  email: string;
-  expiresAt: number;
+  passwordHash?: string;
 };
 
 function getJWTSecret(): Uint8Array {
@@ -61,6 +58,18 @@ export function escapeHtml(text: string): string {
     .replace(/'/g, "&#x27;");
 }
 
+export function hashPassword(password: string): string {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(password, salt, 64).toString("hex");
+  return `${salt}:${hash}`;
+}
+
+export function verifyPassword(password: string, stored: string): boolean {
+  const [salt, hash] = stored.split(":");
+  const computed = crypto.scryptSync(password, salt, 64).toString("hex");
+  return hash === computed;
+}
+
 export async function getUsers(): Promise<User[]> {
   return (await redis.get<User[]>("users")) ?? [];
 }
@@ -74,7 +83,7 @@ export async function saveUsers(users: User[]): Promise<void> {
   await redis.set("users", users);
 }
 
-export async function createUser(name: string, email: string): Promise<User> {
+export async function createUser(name: string, email: string, password?: string): Promise<User> {
   const users = await getUsers();
   const isFirst = users.length === 0;
   const user: User = {
@@ -84,6 +93,7 @@ export async function createUser(name: string, email: string): Promise<User> {
     role: isFirst ? "admin" : "user",
     active: true,
     createdAt: new Date().toISOString(),
+    passwordHash: password ? hashPassword(password) : undefined,
   };
   users.push(user);
   await saveUsers(users);
@@ -106,18 +116,10 @@ export async function verifyEmailToken(token: string): Promise<string | null> {
   }
 }
 
-export async function generateMagicToken(email: string): Promise<string> {
-  const token = crypto.randomUUID();
-  const doc: MagicToken = { email, expiresAt: Date.now() + 15 * 60 * 1000 };
-  await redis.hset("magic_tokens", { [token]: JSON.stringify(doc) });
-  return token;
-}
-
-export async function consumeMagicToken(token: string): Promise<string | null> {
-  const raw = await redis.hget<string>("magic_tokens", token);
-  if (!raw) return null;
-  await redis.hdel("magic_tokens", token);
-  const doc: MagicToken = JSON.parse(raw);
-  if (Date.now() > doc.expiresAt) return null;
-  return doc.email;
+export async function updateUserPassword(userId: string, password: string): Promise<void> {
+  const users = await getUsers();
+  const idx = users.findIndex((u) => u.id === userId);
+  if (idx === -1) throw new Error("User not found");
+  users[idx].passwordHash = hashPassword(password);
+  await saveUsers(users);
 }

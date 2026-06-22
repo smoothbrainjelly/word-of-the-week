@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
 
@@ -14,33 +14,18 @@ export default function LoginPage() {
     if (sending) return;
     setSending(true);
     setError("");
-    const res = await fetch("/api/auth/send-link", {
+    const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: "", email }),
+      body: JSON.stringify({ email, password }),
     });
     if (res.ok) {
-      setSent(true);
+      window.location.href = "/";
     } else {
       const data = await res.json();
-      if (data.error?.includes("Name is required")) {
-        setError("No account found with this email. Please sign up instead.");
-      } else {
-        setError(data.error || "Something went wrong");
-      }
+      setError(data.error || "Something went wrong");
     }
     setSending(false);
-  }
-
-  if (sent) {
-    return (
-      <div className="max-w-sm mx-auto p-8 pt-20 text-center space-y-4">
-        <h1 className="text-2xl font-bold">Check your email</h1>
-        <p className="text-zinc-500 text-sm">
-          We sent a magic link to <strong>{email}</strong>. Click it to sign in.
-        </p>
-      </div>
-    );
   }
 
   return (
@@ -55,9 +40,18 @@ export default function LoginPage() {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+        <input
+          type="password"
+          placeholder="Password"
+          className="border rounded-lg p-2 w-full text-sm"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          minLength={8}
+        />
         {error && <p className="text-red-500 text-sm">{error}</p>}
         <button disabled={sending} className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium w-full disabled:opacity-50">
-          {sending ? "Sending…" : "Send magic link"}
+          {sending ? "Signing in…" : "Sign in"}
         </button>
       </form>
 
