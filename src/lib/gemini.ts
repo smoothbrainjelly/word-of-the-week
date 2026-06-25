@@ -32,7 +32,9 @@ type WordResult = {
   example: string;
 };
 
-export async function generateWord(theme: string, avoidWords: Set<string> = new Set(), maxRetries = 3): Promise<WordResult> {
+export async function generateWord(theme: string, avoidWords: Set<string> = new Set()): Promise<WordResult> {
+  const maxRetries = avoidWords.size > 0 ? 6 : 3;
+
   function buildPrompt(attempt: number): string {
     const p = `You are a "Word of the Week" generator. Given this theme: "${theme}", pick a fitting word and return JSON (no markdown, no backticks) with:
 {
@@ -45,10 +47,14 @@ export async function generateWord(theme: string, avoidWords: Set<string> = new 
 }`;
 
     if (avoidWords.size > 0) {
-      if (attempt > 1) {
-        return `${p}\n\nCRITICAL: The previous attempt picked a word that is already used. You MUST pick a completely new word. None of these are allowed: ${[...avoidWords].join(", ")}. The word you choose MUST NOT be in that list.`;
+      const list = [...avoidWords].join(", ");
+      if (attempt >= 3) {
+        return `${p}\n\nBLOCKED WORDS (${avoidWords.size}): ${list}. DO NOT use ANY of these. Pick something completely new.`;
       }
-      return `${p}\n\nIMPORTANT: Do NOT pick any of these already-used words: ${[...avoidWords].join(", ")}. Choose a completely different word.`;
+      if (attempt >= 2) {
+        return `${p}\n\nWARNING: All of these words have already been used: ${list}. You MUST NOT repeat them. Pick a different word entirely.`;
+      }
+      return `${p}\n\nIMPORTANT: Do NOT pick any of these already-used words: ${list}. Choose a completely different word.`;
     }
     return p;
   }
@@ -57,23 +63,26 @@ export async function generateWord(theme: string, avoidWords: Set<string> = new 
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const prompt = buildPrompt(attempt);
+    let collisionDetected = false;
+
     for (const modelName of MODELS) {
       try {
-        const prompt = buildPrompt(attempt);
         console.log("[gemini] Calling model", { model: modelName, attempt });
         const model = ai.getGenerativeModel({ model: modelName });
         const start = Date.now();
         const result = await model.generateContent(prompt);
         const elapsed = Date.now() - start;
         const text = result.response.text().trim();
-        console.log("[gemini] Model succeeded", { model: modelName, elapsed });
+        console.log("[gemini] Model succeeded", { model: modelName, attempt, elapsed });
         const cleaned = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
         const parsed = JSON.parse(cleaned) as WordResult;
 
         if (avoidWords.has(parsed.word.toLowerCase())) {
-          console.warn("[gemini] Word collides with avoid list", { word: parsed.word, attempt });
+          console.warn("[gemini] Word collision detected", { word: parsed.word, attempt });
           lastError = new Error(`Word "${parsed.word}" is already used`);
-          continue;
+          collisionDetected = true;
+          break;
         }
 
         return parsed;
@@ -89,8 +98,12 @@ export async function generateWord(theme: string, avoidWords: Set<string> = new 
         throw err;
       }
     }
+
+    if (!collisionDetected) {
+      break;
+    }
   }
 
-  console.error("[gemini] All models and retries exhausted");
+  console.error("[gemini] All retries exhausted", { maxRetries, avoidWordsCount: avoidWords.size });
   throw lastError;
 }
