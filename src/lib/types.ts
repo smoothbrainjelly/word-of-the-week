@@ -1,3 +1,12 @@
+export type WordResult = {
+  word: string;
+  pronunciation: string;
+  simple_pronunciation: string;
+  definition: string;
+  etymology: string;
+  example: string;
+};
+
 export type Settings = {
   promptTheme: string;
   day: string;

@@ -115,7 +115,7 @@ export default function PreviewPage() {
     const res = await fetch("/api/preview/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: target, saveToHistory }),
+      body: JSON.stringify({ email: target, saveToHistory, word }),
     });
     if (res.ok) setSent(true);
     setSending(false);
