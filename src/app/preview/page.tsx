@@ -53,6 +53,7 @@ export default function PreviewPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedEmail, setSelectedEmail] = useState("");
   const [forceSend, setForceSend] = useState(false);
+  const [saveToHistory, setSaveToHistory] = useState(false);
 
   async function loadUsers() {
     const res = await fetch("/api/users");
@@ -114,7 +115,7 @@ export default function PreviewPage() {
     const res = await fetch("/api/preview/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: target }),
+      body: JSON.stringify({ email: target, saveToHistory }),
     });
     if (res.ok) setSent(true);
     setSending(false);
@@ -198,6 +199,15 @@ export default function PreviewPage() {
                 Send to all active
               </button>
             </div>
+            <label className="flex items-center gap-1.5 text-xs text-zinc-500 cursor-pointer pt-2">
+              <input
+                type="checkbox"
+                checked={saveToHistory}
+                onChange={(e) => setSaveToHistory(e.target.checked)}
+                className="w-3 h-3 accent-blue-600"
+              />
+              <span className="text-zinc-600 font-medium">Save word to history after sending</span>
+            </label>
           </div>
         )}
       </div>

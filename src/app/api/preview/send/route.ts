@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
+import { Redis } from "@upstash/redis";
 import { generateWord } from "@/lib/gemini";
 import { sendEmail } from "@/lib/email";
 import { renderHtmlTemplate } from "@/lib/email-template";
 import { requireAuth, signEmailToken, getUsers } from "@/lib/auth";
-import { getUsedWords } from "@/lib/used-words";
+import { getUsedWords, addUsedWord } from "@/lib/used-words";
+import { redis } from "@/lib/redis";
+import type { HistoryEntry } from "@/lib/types";
 
 const DEFAULT_THEME = "English words that are familiar but not everyday vocabulary — share the word with IPA pronunciation, definition, etymology, and an example sentence";
 
@@ -13,7 +17,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { email } = await request.json();
+  const { email, saveToHistory } = await request.json();
 
   const theme = DEFAULT_THEME;
 
@@ -48,6 +52,23 @@ export async function POST(request: Request) {
       } catch (e) {
         console.error(`[preview/send] Failed to send to ${addr.slice(0, 3)}***:`, e);
       }
+    }
+
+    if (sentTo > 0 && saveToHistory) {
+      await addUsedWord(word.word);
+      const history = (await (redis as unknown as Redis).get<HistoryEntry[]>("history")) ?? [];
+      history.push({
+        id: crypto.randomUUID(),
+        word: word.word,
+        pronunciation: word.pronunciation,
+        simple_pronunciation: word.simple_pronunciation,
+        definition: word.definition,
+        etymology: word.etymology,
+        example: word.example,
+        sentAt: new Date().toISOString(),
+        recipientCount: sentTo,
+      });
+      await (redis as unknown as Redis).set("history", history);
     }
 
     return NextResponse.json({ success: true, word: word.word, sentTo });
