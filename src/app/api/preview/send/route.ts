@@ -4,7 +4,7 @@ import { Redis } from "@upstash/redis";
 import { sendEmail } from "@/lib/email";
 import { renderHtmlTemplate } from "@/lib/email-template";
 import { requireAuth, signEmailToken, getUsers } from "@/lib/auth";
-import { addUsedWord } from "@/lib/word-pool";
+import { addUsedWord, removeFromPool } from "@/lib/word-pool";
 import { redis } from "@/lib/redis";
 import type { HistoryEntry, WordResult } from "@/lib/types";
 
@@ -53,6 +53,7 @@ export async function POST(request: Request) {
 
   if (sentTo > 0 && saveToHistory) {
     await addUsedWord(providedWord.word);
+    await removeFromPool(providedWord.word);
     const history = (await (redis as unknown as Redis).get<HistoryEntry[]>("history")) ?? [];
     history.push({
       id: crypto.randomUUID(),
