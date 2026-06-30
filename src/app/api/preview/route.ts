@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import { generateWord } from "@/lib/gemini";
+import { enrichWord } from "@/lib/gemini";
 import { requireAuth } from "@/lib/auth";
-import { getUsedWords } from "@/lib/used-words";
-
-const DEFAULT_THEME = "English words that are familiar but not everyday vocabulary — share the word with IPA pronunciation, definition, etymology, and an example sentence";
+import { previewWord, refillPool } from "@/lib/word-pool";
 
 export async function POST() {
   const user = await requireAuth();
@@ -11,12 +9,17 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const theme = DEFAULT_THEME;
-
   try {
-    const usedWords = await getUsedWords();
-    const word = await generateWord(theme, usedWords);
-    return NextResponse.json(word);
+    let wordStr = await previewWord();
+    if (!wordStr) {
+      await refillPool();
+      wordStr = await previewWord();
+    }
+    if (!wordStr) {
+      return NextResponse.json({ error: "No words available. Please refill the pool." }, { status: 500 });
+    }
+    const result = await enrichWord(wordStr);
+    return NextResponse.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("Preview generation failed:", message);

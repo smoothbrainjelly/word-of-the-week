@@ -4,7 +4,7 @@ import { Redis } from "@upstash/redis";
 import { sendEmail } from "@/lib/email";
 import { renderHtmlTemplate } from "@/lib/email-template";
 import { requireAuth, signEmailToken, getUsers } from "@/lib/auth";
-import { getUsedWords, addUsedWord } from "@/lib/used-words";
+import { addUsedWord } from "@/lib/word-pool";
 import { redis } from "@/lib/redis";
 import type { HistoryEntry, WordResult } from "@/lib/types";
 

@@ -6,6 +6,9 @@ import type { PaginatedHistory } from "@/lib/types";
 export default function HistoryPage() {
   const [data, setData] = useState<PaginatedHistory | null>(null);
   const [page, setPage] = useState(1);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [refilling, setRefilling] = useState(false);
+  const [refillResult, setRefillResult] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/history?page=${page}&limit=10`);
@@ -17,11 +20,50 @@ export default function HistoryPage() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((u) => { if (u?.user?.role === "admin") setIsAdmin(true); })
+      .catch(() => {});
+  }, []);
+
+  async function handleRefill() {
+    setRefilling(true);
+    setRefillResult(null);
+    try {
+      const res = await fetch("/api/admin/refill-pool", { method: "POST" });
+      const json = await res.json();
+      if (res.ok) {
+        setRefillResult(`Added ${json.added} words (pool size: ${json.poolSize})`);
+      } else {
+        setRefillResult(`Error: ${json.error}`);
+      }
+    } catch {
+      setRefillResult("Refill failed");
+    } finally {
+      setRefilling(false);
+    }
+  }
+
   if (!data) return <div className="p-8 text-zinc-500">Loading…</div>;
 
   return (
     <div className="mx-auto p-10 space-y-6" style={{ maxWidth: 1200 }}>
-      <h1 className="text-2xl font-bold">History</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">History</h1>
+        {isAdmin && (
+          <div className="flex items-center gap-3">
+            {refillResult && <span className="text-sm text-zinc-500">{refillResult}</span>}
+            <button
+              onClick={handleRefill}
+              disabled={refilling}
+              className="px-3 py-1 border rounded text-sm disabled:opacity-30"
+            >
+              {refilling ? "Refilling…" : "Refill Word Pool"}
+            </button>
+          </div>
+        )}
+      </div>
 
       {data.entries.length === 0 && (
         <p className="text-zinc-400">No words sent yet. The cron job will send the first one on schedule.</p>

@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import type { WordResult } from "@/lib/types";
 
 const MODELS = [
   "gemini-2.5-flash-lite",
@@ -20,90 +21,115 @@ function getGenAI(): GoogleGenerativeAI {
 
 function isRetryableError(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
-  return msg.includes("429") || msg.includes("quota") || msg.includes("RESOURCE_EXHAUSTED") || msg.includes("503") || msg.includes("high demand");
+  return (
+    msg.includes("429") ||
+    msg.includes("quota") ||
+    msg.includes("RESOURCE_EXHAUSTED") ||
+    msg.includes("503") ||
+    msg.includes("high demand")
+  );
 }
 
-type WordResult = {
-  word: string;
-  pronunciation: string;
-  simple_pronunciation: string;
-  definition: string;
-  etymology: string;
-  example: string;
-};
+export type { WordResult };
 
-export async function generateWord(theme: string, avoidWords: Set<string> = new Set()): Promise<WordResult> {
-  const maxRetries = avoidWords.size > 0 ? 6 : 3;
-
-  function buildPrompt(attempt: number): string {
-    const p = `You are a "Word of the Week" generator. Given this theme: "${theme}", pick a fitting word and return JSON (no markdown, no backticks) with:
-{
-  "word": "the word",
-  "pronunciation": "phonetic pronunciation in IPA (e.g., /ˈsɜːr.tən/)",
-  "simple_pronunciation": "simplified spelled-out pronunciation (e.g., SUR-tn)",
-  "definition": "concise definition",
-  "etymology": "brief origin of the word",
-  "example": "a single example sentence using the word"
-}`;
-
-    if (avoidWords.size > 0) {
-      const list = [...avoidWords].join(", ");
-      if (attempt >= 3) {
-        return `${p}\n\nBLOCKED WORDS (${avoidWords.size}): ${list}. DO NOT use ANY of these. Pick something completely new.`;
-      }
-      if (attempt >= 2) {
-        return `${p}\n\nWARNING: All of these words have already been used: ${list}. You MUST NOT repeat them. Pick a different word entirely.`;
-      }
-      return `${p}\n\nIMPORTANT: Do NOT pick any of these already-used words: ${list}. Choose a completely different word.`;
-    }
-    return p;
-  }
+// Ask the LLM for a batch of N candidate words. Returns an array of word strings.
+export async function generateWordBatch(n: number): Promise<string[]> {
+  const prompt =
+    `Generate a list of ${n} interesting English words that are familiar but not everyday vocabulary. ` +
+    `These words should be diverse in origin, length, and subject. ` +
+    `Return ONLY a JSON array of strings like ["word1", "word2", ...]. ` +
+    `No markdown, no code fences, no other text.`;
 
   const ai = getGenAI();
+  const maxRetries = 3;
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    const prompt = buildPrompt(attempt);
-    let collisionDetected = false;
-
     for (const modelName of MODELS) {
       try {
-        console.log("[gemini] Calling model", { model: modelName, attempt });
+        console.log("[gemini] generateWordBatch calling model", { model: modelName, attempt, n });
         const model = ai.getGenerativeModel({ model: modelName });
         const start = Date.now();
         const result = await model.generateContent(prompt);
         const elapsed = Date.now() - start;
         const text = result.response.text().trim();
-        console.log("[gemini] Model succeeded", { model: modelName, attempt, elapsed });
-        const cleaned = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
-        const parsed = JSON.parse(cleaned) as WordResult;
+        console.log("[gemini] generateWordBatch model succeeded", { model: modelName, attempt, elapsed });
 
-        if (avoidWords.has(parsed.word.toLowerCase())) {
-          console.warn("[gemini] Word collision detected", { word: parsed.word, attempt });
-          lastError = new Error(`Word "${parsed.word}" is already used`);
-          collisionDetected = true;
-          break;
+        const cleaned = text
+          .replace(/^```(?:json)?\s*/i, "")
+          .replace(/\s*```$/, "")
+          .trim();
+        const parsed = JSON.parse(cleaned) as unknown;
+
+        if (!Array.isArray(parsed) || !parsed.every((v) => typeof v === "string")) {
+          throw new Error("Response was not a string array");
         }
 
-        return parsed;
+        return parsed as string[];
       } catch (err) {
         lastError = err;
-        console.warn("[gemini] Model failed", { model: modelName, attempt, error: err instanceof Error ? err.message : String(err) });
+        console.warn("[gemini] generateWordBatch model failed", {
+          model: modelName,
+          attempt,
+          error: err instanceof Error ? err.message : String(err),
+        });
         if (isRetryableError(err)) {
           continue;
         }
-        if (err instanceof Error && err.message.includes("already used")) {
-          break;
-        }
-        throw err;
+        // For non-retryable errors (e.g. parse errors) break the model loop
+        // and retry the whole attempt with a fresh call.
+        break;
       }
-    }
-
-    if (!collisionDetected) {
-      break;
     }
   }
 
-  console.error("[gemini] All retries exhausted", { maxRetries, avoidWordsCount: avoidWords.size });
+  console.error("[gemini] generateWordBatch all retries exhausted", { n, maxRetries });
+  throw lastError;
+}
+
+// Given a specific word, ask the LLM for its full WordResult.
+export async function enrichWord(word: string): Promise<WordResult> {
+  const prompt =
+    `Given the word "${word}", return a JSON object (no markdown, no backticks) with exactly these fields: ` +
+    `{"word": "${word}", "pronunciation": "IPA pronunciation", "simple_pronunciation": "simplified spelled-out pronunciation", ` +
+    `"definition": "concise definition", "etymology": "brief origin", "example": "a single example sentence using the word"}`;
+
+  const ai = getGenAI();
+  const maxRetries = 3;
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    for (const modelName of MODELS) {
+      try {
+        console.log("[gemini] enrichWord calling model", { model: modelName, attempt, word });
+        const model = ai.getGenerativeModel({ model: modelName });
+        const start = Date.now();
+        const result = await model.generateContent(prompt);
+        const elapsed = Date.now() - start;
+        const text = result.response.text().trim();
+        console.log("[gemini] enrichWord model succeeded", { model: modelName, attempt, elapsed });
+
+        const cleaned = text
+          .replace(/^```(?:json)?\s*/i, "")
+          .replace(/\s*```$/, "")
+          .trim();
+        const parsed = JSON.parse(cleaned) as WordResult;
+        return parsed;
+      } catch (err) {
+        lastError = err;
+        console.warn("[gemini] enrichWord model failed", {
+          model: modelName,
+          attempt,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        if (isRetryableError(err)) {
+          continue;
+        }
+        break;
+      }
+    }
+  }
+
+  console.error("[gemini] enrichWord all retries exhausted", { word, maxRetries });
   throw lastError;
 }
