@@ -46,6 +46,15 @@ export async function addUsedWord(word: string): Promise<void> {
   }
 }
 
+// Removes a word from the pool (e.g., after manual send).
+export async function removeFromPool(word: string): Promise<void> {
+  try {
+    await redis.srem(WORD_POOL_KEY, word.toLowerCase());
+  } catch (err) {
+    console.warn("[word-pool] removeFromPool failed", err instanceof Error ? err.message : String(err));
+  }
+}
+
 // Filters candidates against word_pool and used_words, then adds remaining
 // candidates to word_pool. Returns stats about how many were added vs total.
 export async function addToPool(candidates: string[]): Promise<{ added: number; total: number }> {
