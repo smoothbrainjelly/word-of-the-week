@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { redis } from "@/lib/redis";
-import { generateWord } from "@/lib/gemini";
+import { enrichWord } from "@/lib/gemini";
 import { sendEmail } from "@/lib/email";
 import { renderHtmlTemplate } from "@/lib/email-template";
 import { getUsers, signEmailToken } from "@/lib/auth";
-import { getUsedWords, addUsedWord } from "@/lib/used-words";
+import { getPoolSize, getAvailableWord, addUsedWord, refillPool } from "@/lib/word-pool";
 import type { HistoryEntry } from "@/lib/types";
-
-const PROMPT_THEME = "English words that are familiar but not everyday vocabulary — share the word with IPA pronunciation, definition, etymology, and an example sentence";
 
 export async function GET(request: Request) {
   const auth = request.headers.get("authorization");
@@ -45,8 +43,20 @@ export async function GET(request: Request) {
 
   console.log("[cron] Active users", { count: active.length });
 
-  const usedWords = await getUsedWords();
-  const word = await generateWord(PROMPT_THEME, usedWords);
+  const poolSize = await getPoolSize();
+  if (poolSize < 20) {
+    console.log("[cron] Pool low, triggering refill", { poolSize });
+    const refillResult = await refillPool();
+    console.log("[cron] Refill complete", refillResult);
+  }
+
+  const wordStr = await getAvailableWord();
+  if (!wordStr) {
+    console.error("[cron] No words available in pool");
+    return NextResponse.json({ error: "No words available" }, { status: 500 });
+  }
+
+  const word = await enrichWord(wordStr);
   console.log("[cron] Word generated", { word: word.word });
 
   const baseUrl = process.env.VERCEL_URL
