@@ -37,9 +37,8 @@ const PLACEHOLDER_EMAIL = `<div style="max-width:600px;margin:0 auto;font-family
 <p style="margin:0 0 20px;font-size:16px">From Latin <em>ipsum</em>, meaning "itself".</p>
 <h3 style="font-size:14px;text-transform:uppercase;letter-spacing:1px;color:#888;margin:0 0 4px">Example</h3>
 <blockquote style="margin:0 0 0 16px;padding-left:16px;border-left:3px solid #ddd;font-style:italic;font-size:16px;color:#555">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</blockquote>
-<hr style="border:none;border-top:2px solid #e5e5e5;margin:24px 0">
-<p style="font-size:13px;color:#888"><a href="#" style="color:#666">Unsubscribe</a> from Word of the Week.</p>
-<hr style="border:none;border-top:2px solid #e5e5e5;margin:24px 0">
+    <hr style="border:none;border-top:2px solid #e5e5e5;margin:24px 0">
+
 <p style="font-size:13px;color:#888"><a href="#" style="color:#666">Unsubscribe</a> from Word of the Week.</p>
 </div>`;
 
