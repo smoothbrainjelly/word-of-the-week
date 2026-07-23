@@ -74,7 +74,7 @@ export default function HistoryPage() {
           <div key={entry.id} className="border rounded-lg p-4 space-y-2">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold">{entry.word}</h2>
+                <h2 className="text-xl font-bold">{entry.word}{entry.part_of_speech ? ` · ${entry.part_of_speech}` : ""}</h2>
                 {(entry.pronunciation || entry.simple_pronunciation) && (
                   <p className="text-sm text-zinc-500">{entry.pronunciation}{entry.pronunciation && entry.simple_pronunciation ? " — " : ""}{entry.simple_pronunciation}</p>
                 )}

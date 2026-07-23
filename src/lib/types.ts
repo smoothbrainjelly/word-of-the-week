@@ -2,6 +2,7 @@ export type WordResult = {
   word: string;
   pronunciation: string;
   simple_pronunciation: string;
+  part_of_speech: string;
   definition: string;
   etymology: string;
   example: string;
@@ -19,6 +20,7 @@ export type HistoryEntry = {
   word: string;
   pronunciation: string;
   simple_pronunciation: string;
+  part_of_speech: string;
   definition: string;
   etymology: string;
   example: string;

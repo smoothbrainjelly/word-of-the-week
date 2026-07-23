@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   if (compact) {
     const html = `<div style="font-family:Georgia,serif;color:#1a1a1a;line-height:1.5">
 <div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:2px">Word of the Week</div>
-<div style="font-size:28px;font-weight:700;margin-bottom:2px">${escapeHtml(word.word)}</div>
+<div style="font-size:28px;font-weight:700;margin-bottom:2px">${escapeHtml(word.word)}${word.part_of_speech ? ` · ${escapeHtml(word.part_of_speech)}` : ""}</div>
 <div style="font-size:14px;color:#666;margin-bottom:12px">${escapeHtml(word.pronunciation || "")}${word.pronunciation && word.simple_pronunciation ? " — " : ""}${escapeHtml(word.simple_pronunciation || "")}</div>
 <hr style="border:none;border-top:1px solid #e5e5e5;margin:0 0 12px">
 <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:2px">Definition</div>
@@ -29,8 +29,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ html });
   }
 
-  const { html: inner } = renderHtmlTemplate(word, "#");
-  const html = `<div style="max-width:600px;margin:0 auto;font-family:Georgia,serif;color:#1a1a1a;padding:40px 20px;line-height:1.6">${inner}</div>`;
+  const { html } = renderHtmlTemplate(word, "#");
 
   return NextResponse.json({ html });
 }

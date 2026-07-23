@@ -83,6 +83,7 @@ export async function GET(request: Request) {
       word: word.word,
       pronunciation: word.pronunciation,
       simple_pronunciation: word.simple_pronunciation,
+      part_of_speech: word.part_of_speech,
       definition: word.definition,
       etymology: word.etymology,
       example: word.example,

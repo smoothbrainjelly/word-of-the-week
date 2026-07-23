@@ -38,6 +38,7 @@ describe("POST /api/preview/render", () => {
         word: "Serendipity",
         pronunciation: "/ˌserənˈdɪpɪti/",
         simple_pronunciation: "ser-uhn-DIP-uh-tee",
+        part_of_speech: "noun",
         definition: "A happy accident.",
         etymology: "From Persian folklore.",
         example: "What a happy accident!",
@@ -47,6 +48,7 @@ describe("POST /api/preview/render", () => {
     const json = await res.json();
     expect(json.html).toContain("Serendipity");
     expect(json.html).toContain("Word of the Week");
+    expect(json.html).toContain("noun");
     expect(json.html).not.toContain("<h1");
   });
 
@@ -56,6 +58,7 @@ describe("POST /api/preview/render", () => {
         word: "Serendipity",
         pronunciation: "/ˌserənˈdɪpɪti/",
         simple_pronunciation: "ser-uhn-DIP-uh-tee",
+        part_of_speech: "noun",
         definition: "A happy accident.",
         etymology: "From Persian folklore.",
         example: "What a happy accident!",
@@ -64,6 +67,7 @@ describe("POST /api/preview/render", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.html).toContain("Serendipity");
+    expect(json.html).toContain("noun");
     expect(json.html).toContain("<h1");
     expect(json.html).toContain("max-width:600px");
   });
@@ -75,6 +79,7 @@ describe("POST /api/preview/render", () => {
         word: "Ephemeral",
         pronunciation: "/ɪˈfemərəl/",
         simple_pronunciation: "ih-FEM-er-uhl",
+        part_of_speech: "adjective",
         definition: "Lasting for a short time.",
         etymology: "From Greek ephēmeros.",
         example: "The beauty was ephemeral.",
@@ -83,6 +88,7 @@ describe("POST /api/preview/render", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.html).toContain("Ephemeral");
+    expect(json.html).toContain("adjective");
     expect(json.html).toContain("<h1");
     expect(json.html).toContain("max-width:600px");
   });
@@ -93,6 +99,7 @@ describe("POST /api/preview/render", () => {
         word: "Test",
         pronunciation: "/test/",
         simple_pronunciation: "test",
+        part_of_speech: "noun",
         definition: "A test.",
         etymology: "Test origin.",
         example: "Test example.",
