@@ -77,7 +77,7 @@ describe("renderHtmlTemplate", () => {
     const result = renderHtmlTemplate(sampleWord);
     expect(result.html).toContain("<h1");
     expect(result.html).toContain("<p");
-    expect(result.html).toContain("<blockquote>");
+    expect(result.html).toContain("<blockquote");
     expect(result.html).toContain("max-width:600px");
   });
 
@@ -93,7 +93,7 @@ describe("renderHtmlTemplate", () => {
 
   it("renders example as blockquote in HTML", () => {
     const result = renderHtmlTemplate(sampleWord);
-    expect(result.html).toContain("<blockquote>");
+    expect(result.html).toContain("<blockquote");
     expect(result.html).toContain(sampleWord.example);
   });
 
