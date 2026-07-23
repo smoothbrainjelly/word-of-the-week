@@ -11,12 +11,16 @@ export type WordData = {
 };
 
 export function renderMarkdownTemplate(word: WordData, unsubscribeUrl?: string): string {
+  const wordLine = word.part_of_speech
+    ? `# ${word.word} · ${word.part_of_speech}`
+    : `# ${word.word}`;
+
   const lines = [
     `# Word of the Week`,
     ``,
-    `# ${word.word}`,
+    wordLine,
     ``,
-    `${word.part_of_speech} · ${word.pronunciation} — ${word.simple_pronunciation}`,
+    `${word.pronunciation} — ${word.simple_pronunciation}`,
     ``,
     `---`,
     ``,
@@ -42,6 +46,7 @@ export function renderMarkdownTemplate(word: WordData, unsubscribeUrl?: string):
 
 export function renderHtmlTemplate(word: WordData, unsubscribeUrl?: string): { html: string; text: string } {
   const markdown = renderMarkdownTemplate(word, unsubscribeUrl);
-  const html = marked.parse(markdown) as string;
+  const inner = marked.parse(markdown) as string;
+  const html = `<div style="max-width:600px;margin:0 auto;font-family:Georgia,serif;color:#1a1a1a;padding:40px 20px;line-height:1.6">${inner}</div>`;
   return { html, text: markdown };
 }

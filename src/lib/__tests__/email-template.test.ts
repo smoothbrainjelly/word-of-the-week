@@ -50,17 +50,17 @@ describe("renderMarkdownTemplate", () => {
     expect(result).not.toContain("Unsubscribe");
   });
 
-  it("includes part of speech with pronunciation", () => {
+  it("includes part of speech next to the word", () => {
     const result = renderMarkdownTemplate(sampleWord);
-    expect(result).toContain(`${sampleWord.part_of_speech} · ${sampleWord.pronunciation} — ${sampleWord.simple_pronunciation}`);
+    expect(result).toContain(`# ${sampleWord.word} · ${sampleWord.part_of_speech}`);
   });
 
   it("produces expected markdown structure", () => {
     const result = renderMarkdownTemplate(sampleWord);
     const lines = result.split("\n");
     expect(lines[0]).toBe("# Word of the Week");
-    expect(lines[2]).toBe(`# ${sampleWord.word}`);
-    expect(lines[4]).toBe(`${sampleWord.part_of_speech} · ${sampleWord.pronunciation} — ${sampleWord.simple_pronunciation}`);
+    expect(lines[2]).toBe(`# ${sampleWord.word} · ${sampleWord.part_of_speech}`);
+    expect(lines[4]).toBe(`${sampleWord.pronunciation} — ${sampleWord.simple_pronunciation}`);
     expect(lines[6]).toBe("---");
     expect(lines[8]).toBe("### Definition");
   });
@@ -73,11 +73,12 @@ describe("renderHtmlTemplate", () => {
     expect(result).toHaveProperty("text");
   });
 
-  it("returns valid HTML", () => {
+  it("returns valid HTML with wrapper", () => {
     const result = renderHtmlTemplate(sampleWord);
     expect(result.html).toContain("<h1");
     expect(result.html).toContain("<p");
     expect(result.html).toContain("<blockquote>");
+    expect(result.html).toContain("max-width:600px");
   });
 
   it("returns text as the raw markdown", () => {
