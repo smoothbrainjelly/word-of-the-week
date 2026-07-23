@@ -60,6 +60,7 @@ export async function POST(request: Request) {
       word: providedWord.word,
       pronunciation: providedWord.pronunciation,
       simple_pronunciation: providedWord.simple_pronunciation,
+      part_of_speech: providedWord.part_of_speech,
       definition: providedWord.definition,
       etymology: providedWord.etymology,
       example: providedWord.example,

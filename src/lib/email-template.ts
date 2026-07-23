@@ -4,6 +4,7 @@ export type WordData = {
   word: string;
   pronunciation: string;
   simple_pronunciation: string;
+  part_of_speech: string;
   definition: string;
   etymology: string;
   example: string;
@@ -15,7 +16,7 @@ export function renderMarkdownTemplate(word: WordData, unsubscribeUrl?: string):
     ``,
     `# ${word.word}`,
     ``,
-    `${word.pronunciation} — ${word.simple_pronunciation}`,
+    `${word.part_of_speech} · ${word.pronunciation} — ${word.simple_pronunciation}`,
     ``,
     `---`,
     ``,

@@ -6,6 +6,7 @@ const sampleWord: WordData = {
   word: "Serendipity",
   pronunciation: "/ˌserənˈdɪpɪti/",
   simple_pronunciation: "ser-uhn-DIP-uh-tee",
+  part_of_speech: "noun",
   definition: "The occurrence of events by chance in a happy or beneficial way.",
   etymology: "Coined by Horace Walpole from the Persian fairy tale 'The Three Princes of Serendip'.",
   example: "Finding that rare book at the flea market was pure serendipity.",
@@ -49,9 +50,9 @@ describe("renderMarkdownTemplate", () => {
     expect(result).not.toContain("Unsubscribe");
   });
 
-  it("separates pronunciation with em dash", () => {
+  it("includes part of speech with pronunciation", () => {
     const result = renderMarkdownTemplate(sampleWord);
-    expect(result).toContain(`${sampleWord.pronunciation} — ${sampleWord.simple_pronunciation}`);
+    expect(result).toContain(`${sampleWord.part_of_speech} · ${sampleWord.pronunciation} — ${sampleWord.simple_pronunciation}`);
   });
 
   it("produces expected markdown structure", () => {
@@ -59,7 +60,7 @@ describe("renderMarkdownTemplate", () => {
     const lines = result.split("\n");
     expect(lines[0]).toBe("# Word of the Week");
     expect(lines[2]).toBe(`# ${sampleWord.word}`);
-    expect(lines[4]).toBe(`${sampleWord.pronunciation} — ${sampleWord.simple_pronunciation}`);
+    expect(lines[4]).toBe(`${sampleWord.part_of_speech} · ${sampleWord.pronunciation} — ${sampleWord.simple_pronunciation}`);
     expect(lines[6]).toBe("---");
     expect(lines[8]).toBe("### Definition");
   });

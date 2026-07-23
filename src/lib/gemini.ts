@@ -92,7 +92,7 @@ export async function enrichWord(word: string): Promise<WordResult> {
   const prompt =
     `Given the word "${word}", return a JSON object (no markdown, no backticks) with exactly these fields: ` +
     `{"word": "${word}", "pronunciation": "IPA pronunciation", "simple_pronunciation": "simplified spelled-out pronunciation", ` +
-    `"definition": "concise definition", "etymology": "brief origin", "example": "a single example sentence using the word"}`;
+    `"part_of_speech": "the part of speech (e.g. noun, verb, adjective)", "definition": "concise definition", "etymology": "brief origin", "example": "a single example sentence using the word"}`;
 
   const ai = getGenAI();
   const maxRetries = 3;

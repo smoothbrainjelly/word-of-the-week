@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     const html = `<div style="font-family:Georgia,serif;color:#1a1a1a;line-height:1.5">
 <div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:2px">Word of the Week</div>
 <div style="font-size:28px;font-weight:700;margin-bottom:2px">${escapeHtml(word.word)}</div>
-<div style="font-size:14px;color:#666;margin-bottom:12px">${escapeHtml(word.pronunciation || "")}${word.pronunciation && word.simple_pronunciation ? " — " : ""}${escapeHtml(word.simple_pronunciation || "")}</div>
+<div style="font-size:14px;color:#666;margin-bottom:12px">${escapeHtml(word.part_of_speech || "")}${word.part_of_speech && (word.pronunciation || word.simple_pronunciation) ? " · " : ""}${escapeHtml(word.pronunciation || "")}${word.pronunciation && word.simple_pronunciation ? " — " : ""}${escapeHtml(word.simple_pronunciation || "")}</div>
 <hr style="border:none;border-top:1px solid #e5e5e5;margin:0 0 12px">
 <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:2px">Definition</div>
 <div style="font-size:14px;margin-bottom:12px">${escapeHtml(word.definition)}</div>

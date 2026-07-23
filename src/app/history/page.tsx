@@ -75,8 +75,8 @@ export default function HistoryPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold">{entry.word}</h2>
-                {(entry.pronunciation || entry.simple_pronunciation) && (
-                  <p className="text-sm text-zinc-500">{entry.pronunciation}{entry.pronunciation && entry.simple_pronunciation ? " — " : ""}{entry.simple_pronunciation}</p>
+                {(entry.pronunciation || entry.simple_pronunciation || entry.part_of_speech) && (
+                  <p className="text-sm text-zinc-500">{entry.part_of_speech}{entry.part_of_speech && (entry.pronunciation || entry.simple_pronunciation) ? " · " : ""}{entry.pronunciation}{entry.pronunciation && entry.simple_pronunciation ? " — " : ""}{entry.simple_pronunciation}</p>
                 )}
               </div>
               <span className="text-xs text-zinc-400">
