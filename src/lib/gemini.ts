@@ -92,7 +92,8 @@ export async function enrichWord(word: string): Promise<WordResult> {
   const prompt =
     `Given the word "${word}", return a JSON object (no markdown, no backticks) with exactly these fields: ` +
     `{"word": "${word}", "pronunciation": "IPA pronunciation", "simple_pronunciation": "simplified spelled-out pronunciation", ` +
-    `"part_of_speech": "the part of speech (e.g. noun, verb, adjective)", "definition": "concise definition", "etymology": "brief origin", "example": "a single example sentence using the word"}`;
+    `"part_of_speech": "the part of speech (e.g. noun, verb, adjective)", "definition": "concise definition", "etymology": "brief origin", "example": "a single example sentence using the word", ` +
+    `"synonyms": "the top 3 synonyms as an array of strings", "antonyms": "the top 3 antonyms as an array of strings"}`;
 
   const ai = getGenAI();
   const maxRetries = 3;
@@ -113,8 +114,14 @@ export async function enrichWord(word: string): Promise<WordResult> {
           .replace(/^```(?:json)?\s*/i, "")
           .replace(/\s*```$/, "")
           .trim();
-        const parsed = JSON.parse(cleaned) as WordResult;
-        return parsed;
+        const parsed = JSON.parse(cleaned) as Partial<WordResult>;
+        parsed.synonyms = Array.isArray(parsed.synonyms)
+          ? parsed.synonyms.filter((s): s is string => typeof s === "string")
+          : [];
+        parsed.antonyms = Array.isArray(parsed.antonyms)
+          ? parsed.antonyms.filter((s): s is string => typeof s === "string")
+          : [];
+        return parsed as WordResult;
       } catch (err) {
         lastError = err;
         console.warn("[gemini] enrichWord model failed", {

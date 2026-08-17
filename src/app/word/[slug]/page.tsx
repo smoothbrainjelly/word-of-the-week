@@ -96,6 +96,42 @@ export default function WordDetailPage() {
               {entry.example}
             </blockquote>
           </section>
+
+          {entry.synonyms && entry.synonyms.length > 0 && (
+            <section>
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-2">
+                Synonyms
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {entry.synonyms.map((synonym) => (
+                  <span
+                    key={synonym}
+                    className="px-3 py-1 bg-zinc-100 border border-zinc-200 rounded-full text-sm text-zinc-700"
+                  >
+                    {synonym}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {entry.antonyms && entry.antonyms.length > 0 && (
+            <section>
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-2">
+                Antonyms
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {entry.antonyms.map((antonym) => (
+                  <span
+                    key={antonym}
+                    className="px-3 py-1 bg-zinc-100 border border-zinc-200 rounded-full text-sm text-zinc-700"
+                  >
+                    {antonym}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
 
         <hr className="my-8 border-zinc-200" />
