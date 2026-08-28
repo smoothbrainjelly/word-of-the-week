@@ -32,6 +32,7 @@ export default function NavBar() {
         {isAdmin && <Link href="/preview" className="hover:text-zinc-600">Preview</Link>}
         {isAdmin && <Link href="/users" className="hover:text-zinc-600">Users</Link>}
         <Link href="/history" className="hover:text-zinc-600">History</Link>
+        <Link href="/game" className="hover:text-zinc-600">Matching</Link>
         <div className="ml-auto flex items-center gap-3">
           {user ? (
             <>
