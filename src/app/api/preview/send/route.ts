@@ -64,6 +64,8 @@ export async function POST(request: Request) {
       definition: providedWord.definition,
       etymology: providedWord.etymology,
       example: providedWord.example,
+      synonyms: providedWord.synonyms,
+      antonyms: providedWord.antonyms,
       sentAt: new Date().toISOString(),
       recipientCount: sentTo,
     });

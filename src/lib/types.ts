@@ -6,6 +6,8 @@ export type WordResult = {
   definition: string;
   etymology: string;
   example: string;
+  synonyms: string[];
+  antonyms: string[];
 };
 
 export type Settings = {
@@ -24,6 +26,8 @@ export type HistoryEntry = {
   definition: string;
   etymology: string;
   example: string;
+  synonyms?: string[];
+  antonyms?: string[];
   sentAt: string;
   recipientCount: number;
 };

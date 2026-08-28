@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { HistoryEntry } from "@/lib/types";
 import type { User } from "@/lib/auth";
+import { wordToSlug } from "@/lib/slug";
 
 export default function DashboardPage() {
   const [activeCount, setActiveCount] = useState(0);
@@ -50,7 +52,11 @@ export default function DashboardPage() {
           <p className="text-zinc-400 text-sm">No words sent yet.</p>
         )}
         {recent.map((entry) => (
-          <div key={entry.id} className="border rounded-lg p-4">
+          <Link
+            key={entry.id}
+            href={`/word/${wordToSlug(entry.word)}`}
+            className="block border rounded-lg p-4 hover:border-zinc-400 transition-colors"
+          >
             <div className="flex items-center justify-between">
               <p className="font-bold text-lg">{entry.word}</p>
               <p className="text-xs text-zinc-400">
@@ -58,7 +64,7 @@ export default function DashboardPage() {
               </p>
             </div>
             <p className="text-sm text-zinc-600 mt-1">{entry.definition}</p>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

@@ -87,6 +87,8 @@ export async function GET(request: Request) {
       definition: word.definition,
       etymology: word.etymology,
       example: word.example,
+      synonyms: word.synonyms,
+      antonyms: word.antonyms,
       sentAt: now.toISOString(),
       recipientCount: sentCount,
     });
