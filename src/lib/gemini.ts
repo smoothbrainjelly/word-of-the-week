@@ -137,6 +137,6 @@ export async function enrichWord(word: string): Promise<WordResult> {
     }
   }
 
-  console.error("[gemini] enrichWord all retries exhausted", { word, maxRetries });
+  console.error("[gemini] enrichWord all retries exhausted...", { word, maxRetries });
   throw lastError;
 }
