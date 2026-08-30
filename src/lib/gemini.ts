@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import type { GenerationConfig } from "@google/generative-ai";
 import type { WordResult } from "@/lib/types";
 
 const MODELS = [
@@ -7,6 +8,19 @@ const MODELS = [
   "gemini-3.1-flash-lite",
   "gemini-3.5-flash",
 ] as const;
+
+const TTS_MODELS = [
+  "gemini-2.5-flash-preview-tts",
+  "gemini-3.1-flash-tts-preview",
+  "gemini-2.5-pro-preview-tts",
+] as const;
+
+const TTS_VOICES = ["Kore", "Puck", "Aoede", "Fenrir", "Zephyr"] as const;
+
+export type SpeechAudio = {
+  audio: string;
+  mimeType: string;
+};
 
 let genAI: GoogleGenerativeAI | null = null;
 
@@ -138,5 +152,129 @@ export async function enrichWord(word: string): Promise<WordResult> {
   }
 
   console.error("[gemini] enrichWord all retries exhausted...", { word, maxRetries });
+  throw lastError;
+}
+
+// Formats browsers can play from an <audio> element without repackaging.
+const PLAYABLE_AUDIO = /^audio\/(wav|wave|x-wav|mp3|mpeg|ogg|webm|aac|m4a|x-m4a)$/i;
+
+// Wrap raw PCM samples (base64) in a RIFF/WAVE header so browsers can play it.
+// Handles linear PCM (format 1) and µ-law (format 7) at any bit depth.
+function pcmToWav(
+  base64Pcm: string,
+  opts: { sampleRate: number; numChannels: number; bitsPerSample: number; format: number },
+): string {
+  const pcm = Buffer.from(base64Pcm, "base64");
+  const bytesPerSample = opts.bitsPerSample / 8;
+  const byteRate = opts.sampleRate * opts.numChannels * bytesPerSample;
+  const blockAlign = opts.numChannels * bytesPerSample;
+
+  const header = Buffer.alloc(44);
+  header.write("RIFF", 0, "ascii");
+  header.writeUInt32LE(36 + pcm.length, 4);
+  header.write("WAVE", 8, "ascii");
+  header.write("fmt ", 12, "ascii");
+  header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(opts.format, 20);
+  header.writeUInt16LE(opts.numChannels, 22);
+  header.writeUInt32LE(opts.sampleRate, 24);
+  header.writeUInt32LE(byteRate, 28);
+  header.writeUInt16LE(blockAlign, 32);
+  header.writeUInt16LE(opts.bitsPerSample, 34);
+  header.write("data", 36, "ascii");
+  header.writeUInt32LE(pcm.length, 40);
+
+  return Buffer.concat([header, pcm]).toString("base64");
+}
+
+// Normalize whatever the TTS model returns into something an <audio> tag can
+// play. Browser-native formats pass through untouched; raw PCM (L16/L8/L24,
+// µ-law) is wrapped in a WAV container.
+function toBrowserPlayableAudio(input: SpeechAudio): SpeechAudio {
+  const mimeType = input.mimeType;
+  if (!mimeType || PLAYABLE_AUDIO.test(mimeType)) {
+    return input;
+  }
+
+  // Only repackage formats we recognize as raw samples; leave anything else.
+  if (!/pcm|l\d+|mulaw|pcmu/i.test(mimeType)) {
+    return input;
+  }
+
+  const isMulaw = /mulaw|pcmu/i.test(mimeType);
+  const bitsPerSample = Number(mimeType.match(/l(\d+)/i)?.[1] ?? (isMulaw ? 8 : 16));
+  const sampleRate = Number(mimeType.match(/rate=(\d+)/i)?.[1] ?? 24000);
+  const numChannels = Number(mimeType.match(/channels?=(\d+)/i)?.[1] ?? 1);
+  const format = isMulaw ? 7 : 1;
+
+  return {
+    audio: pcmToWav(input.audio, { sampleRate, numChannels, bitsPerSample, format }),
+    mimeType: "audio/wav",
+  };
+}
+
+// Synthesize an audible pronunciation for a word using a TTS model.
+// Returns the audio as a base64 string along with its MIME type.
+export async function synthesizeSpeech(word: string): Promise<SpeechAudio> {
+  const ai = getGenAI();
+  const maxRetries = 3;
+  let lastError: unknown;
+
+  const generationConfig = {
+    responseModalities: ["AUDIO"],
+    speechConfig: {
+      voiceConfig: {
+        prebuiltVoiceConfig: {
+          voiceName: TTS_VOICES[0],
+        },
+      },
+    },
+  } as unknown as GenerationConfig;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    for (const modelName of TTS_MODELS) {
+      try {
+        console.log("[gemini] synthesizeSpeech calling model", { model: modelName, attempt, word });
+        const model = ai.getGenerativeModel({
+          model: modelName,
+          generationConfig,
+        });
+        const start = Date.now();
+        const result = await model.generateContent({
+          contents: [{ role: "user", parts: [{ text: word }] }],
+        });
+        const elapsed = Date.now() - start;
+
+        const parts = result.response.candidates?.[0]?.content?.parts ?? [];
+        const audio = parts.find((part) => part.inlineData)?.inlineData;
+        if (!audio?.data) {
+          throw new Error("No audio returned by TTS model");
+        }
+
+        const { audio: audioData, mimeType } = toBrowserPlayableAudio({
+          audio: audio.data,
+          mimeType: audio.mimeType,
+        });
+
+        console.log("[gemini] synthesizeSpeech model succeeded", {
+          model: modelName,
+          attempt,
+          elapsed,
+          mimeType,
+        });
+        return { audio: audioData, mimeType };
+      } catch (err) {
+        lastError = err;
+        console.warn("[gemini] synthesizeSpeech model failed", {
+          model: modelName,
+          attempt,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        if (!isRetryableError(err)) break;
+      }
+    }
+  }
+
+  console.error("[gemini] synthesizeSpeech all retries exhausted", { word, maxRetries });
   throw lastError;
 }
