@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import PronounceButton from "@/components/PronounceButton";
 import type { HistoryEntry } from "@/lib/types";
 
 export default function WordDetailPage() {
@@ -69,6 +70,10 @@ export default function WordDetailPage() {
               {entry.simple_pronunciation}
             </p>
           )}
+
+          <div className="mt-4">
+            <PronounceButton slug={params.slug} />
+          </div>
         </div>
 
         <hr className="my-8 border-zinc-200" />
