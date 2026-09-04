@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import type { User } from "@/lib/auth";
 
 export default function NavBar() {
   const [user, setUser] = useState<User | null>(null);
+  const [gamesOpen, setGamesOpen] = useState(false);
+  const gamesRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -14,6 +16,16 @@ export default function NavBar() {
       .then((r) => r.json())
       .then((d) => setUser(d.user));
   }, [pathname]);
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (gamesRef.current && !gamesRef.current.contains(e.target as Node)) {
+        setGamesOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
 
   const toggleSubscription = useCallback(async () => {
     const res = await fetch("/api/auth/toggle-subscription", { method: "POST" });
@@ -32,7 +44,43 @@ export default function NavBar() {
         {isAdmin && <Link href="/preview" className="hover:text-zinc-600">Preview</Link>}
         {isAdmin && <Link href="/users" className="hover:text-zinc-600">Users</Link>}
         <Link href="/history" className="hover:text-zinc-600">History</Link>
-        <Link href="/game" className="hover:text-zinc-600">Matching</Link>
+        <div className="relative" ref={gamesRef}>
+          <button
+            onClick={() => setGamesOpen((o) => !o)}
+            aria-expanded={gamesOpen}
+            aria-haspopup="menu"
+            className={`hover:text-zinc-600 flex items-center gap-1 ${
+              pathname.startsWith("/game") ? "text-zinc-900" : ""
+            }`}
+          >
+            Games
+            <span
+              className={`inline-block transition-transform ${
+                gamesOpen ? "rotate-180" : ""
+              }`}
+            >
+              ▾
+            </span>
+          </button>
+          {gamesOpen && (
+            <div className="absolute left-0 top-full mt-1 bg-white border rounded-md shadow-sm py-1 z-50 min-w-36">
+              <Link
+                href="/game"
+                onClick={() => setGamesOpen(false)}
+                className="block px-4 py-1.5 hover:bg-zinc-50"
+              >
+                Match
+              </Link>
+              <Link
+                href="/game/hangman"
+                onClick={() => setGamesOpen(false)}
+                className="block px-4 py-1.5 hover:bg-zinc-50"
+              >
+                Hangman
+              </Link>
+            </div>
+          )}
+        </div>
         <div className="ml-auto flex items-center gap-3">
           {user ? (
             <>
