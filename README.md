@@ -11,6 +11,7 @@ Built with **Next.js 16 (App Router)**, **Upstash Redis**, **Gemini API**, **Gma
 ## Features
 
 - **AI-generated word pool** — Gemini generates batches of words into a Redis pool, refilled automatically when low
+- **Word submissions** — Any user can suggest a word; admins review and approve/reject before it enters the pool
 - **Password auth** — Sign-up/sign-in with password (scrypt-hashed); the first account becomes admin
 - **Admin dashboard** — Manage users, bulk word stats, preview words, send test emails, browse history
 - **Word detail pages** — Per-word pages with definition, pronunciation, synonyms, antonyms, and TTS audio
@@ -119,6 +120,8 @@ Vercel Cron (Sunday 23:00 UTC)
 | `POST /api/preview/send` | Send test email |
 | `GET /api/unsubscribe` | One-click unsubscribe |
 | `GET/PUT/DELETE /api/users` | User management (admin) |
+| `GET/POST /api/submissions` | Word suggestions: submit (any user), list/review (admin) |
+| `PUT /api/submissions` | Approve or reject a word submission (admin) |
 | `GET/POST /api/admin/force-send` | Force the weekly send (admin) |
 | `GET/POST /api/admin/refill-pool` | Inspect/refill the word pool (admin) |
 | `GET /api/game` | Word game deck from past words |
